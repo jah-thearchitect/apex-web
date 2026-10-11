@@ -35,6 +35,8 @@ enum SubscriberStatus {
 model Subscriber {
   id             String           @id @default(cuid())
   email          String           @unique
+  firstName      String           @default("")
+  lastName       String?
   status         SubscriberStatus @default(ACTIVE)
   token          String           @unique @default(cuid())
   source         String?
@@ -57,4 +59,32 @@ model Post {
   sentCount   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// Everyone who has reached the firm through the site, one row per email.
+// `sources` records every way they came in ("minutes", "inquiry",
+// "booking"); names are filled in from whichever form supplied them.
+model Contact {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  firstName      String    @default("")
+  lastName       String?
+  sources        String[]  @default([])
+  lastActivityAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  inquiries      Inquiry[]
+}
+
+// A Consultation-page inquiry, kept even if the notification email fails.
+model Inquiry {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  details   String
+  createdAt DateTime @default(now())
+
+  @@index([contactId])
 }

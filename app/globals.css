@@ -224,8 +224,13 @@ section{ padding-block: var(--section-pad); position: relative; }
 .about p{ color: var(--on-ink-soft); margin-bottom: 18px; max-width: 56ch; font-size: 1.02rem; }
 .about-quote{
   font-family: var(--font-serif); font-style: italic; font-size: clamp(1.3rem, 2.4vw, 1.6rem); line-height: 1.45;
-  color: var(--on-ink); border-left: 2px solid var(--gold); padding-left: 26px;
+  color: var(--on-ink);
 }
+/* Flush-left quotes: a short gold rule above instead of a left bar + indent. */
+.about-quote::before, .prose blockquote::before{
+  content: ""; display: block; width: 40px; height: 2px; background: var(--gold); margin-bottom: 18px;
+}
+.brand svg{ flex: none; display: block; }
 
 
 /* ---------- HOME: HERO ---------- */

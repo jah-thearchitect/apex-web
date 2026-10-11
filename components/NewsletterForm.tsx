@@ -49,7 +49,11 @@ export function NewsletterForm({
   return (
     <>
       <form className="nl-form" onSubmit={onSubmit}>
-        <input type="email" name="email" required maxLength={254} placeholder="you@business.com" aria-label="Email address" />
+        <div className="nl-names">
+          <input type="text" name="firstName" required maxLength={60} placeholder="First name" aria-label="First name" autoComplete="given-name" />
+          <input type="text" name="lastName" maxLength={80} placeholder="Last name (optional)" aria-label="Last name (optional)" autoComplete="family-name" />
+        </div>
+        <input type="email" name="email" required maxLength={254} placeholder="you@business.com" aria-label="Email address" autoComplete="email" />
         <div className="hp-field" aria-hidden="true">
           <label>
             Company website

@@ -7,7 +7,7 @@ export const metadata = { title: "Subscribers" };
 export default async function Subscribers() {
   const subs = await prisma.subscriber.findMany({
     orderBy: { createdAt: "desc" },
-    select: { id: true, email: true, status: true, source: true, createdAt: true, unsubscribedAt: true },
+    select: { id: true, email: true, firstName: true, lastName: true, status: true, source: true, createdAt: true, unsubscribedAt: true },
   });
   const active = subs.filter((s) => s.status === "ACTIVE").length;
 
@@ -27,11 +27,12 @@ export default async function Subscribers() {
       ) : (
         <table className="admin-table">
           <thead>
-            <tr><th>Email</th><th>Status</th><th>Joined from</th><th>Joined</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Status</th><th>Joined from</th><th>Joined</th></tr>
           </thead>
           <tbody>
             {subs.map((s) => (
               <tr key={s.id}>
+                <td>{[s.firstName, s.lastName].filter(Boolean).join(" ") || "—"}</td>
                 <td>{s.email}</td>
                 <td>
                   <span className={`pill ${s.status === "ACTIVE" ? "pill-live" : ""}`}>

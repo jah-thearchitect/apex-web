@@ -32,12 +32,21 @@
 .prose a:hover{ color: var(--accent); }
 .prose ul, .prose ol{ padding-left: 1.4em; margin: 0; }
 .prose li + li{ margin-top: 0.4em; }
-.prose blockquote{ margin-inline: 0; border-left: 2px solid var(--gold); padding-left: 24px; font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--on-ink); }
+.prose blockquote{ margin-inline: 0; font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--on-ink); }
 .prose blockquote p{ color: inherit; }
 .prose img{ max-width: 100%; height: auto; display: block; }
 .prose hr{ border: none; border-top: 1px solid var(--line-ink); margin-block: 2.2em; }
 .prose code{ font-family: var(--font-mono); font-size: 0.9em; background: var(--ink-3); padding: 0.1em 0.35em; }
 .prose pre{ background: var(--ink-2); padding: 16px; overflow-x: auto; }
+
+/* ---------- NEWSLETTER: NAME FIELDS ---------- */
+.nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
+.nl-form .nl-names input{
+  flex: 1 1 140px; min-width: 0; background: var(--ink-2); border: 1px solid var(--line-ink); color: var(--on-ink);
+  font-family: var(--font-mono); font-size: 0.85rem; padding: 0.95em 1.1em;
+}
+.nl-form .nl-names input::placeholder{ color: var(--on-ink-faint); }
+.modal-card .nl-form{ flex-wrap: wrap; }
 
 /* ---------- CONSULTATION: BOOKING ---------- */
 .booking{ display: flex; flex-direction: column; gap: 18px; }
@@ -81,6 +90,11 @@
 .pill{ font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border: 1px solid var(--line-ink); color: var(--on-ink-soft); white-space: nowrap; }
 .pill-live{ border-color: var(--accent); color: var(--accent-bright); }
 
+.tag-row{ display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-h2{ font-size: 1.3rem; margin: 8px 0 16px; }
+.inquiry-list{ display: flex; flex-direction: column; gap: 14px; }
+.inquiry-item{ border: 1px solid var(--line-ink); padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.inquiry-body{ color: var(--on-ink); white-space: pre-wrap; }
 .editor-actions{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .editor-status{ font-family: var(--font-mono); font-size: 0.8rem; color: var(--gold-bright); margin-bottom: 20px; }
 .confirm-box{ border: 1px solid var(--accent); background: var(--ink-2); padding: 22px; margin-bottom: 28px; display: flex; flex-direction: column; gap: 14px; }

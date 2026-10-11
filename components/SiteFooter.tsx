@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { SITE_NAME, TAGLINE } from "@/lib/site";
+import { LogoMark } from "@/components/LogoMark";
 
 export function SiteFooter() {
   return (
     <footer>
       <div className="wrap foot-grid">
         <div>
-          <span className="brand-box">Apex</span>
+          <span className="brand">
+            <LogoMark width={46} />
+            <span className="brand-box">Apex</span>
+          </span>
           <p className="foot-tagline">{TAGLINE}</p>
         </div>
         <div className="foot-col">

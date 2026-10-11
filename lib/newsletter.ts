@@ -29,7 +29,7 @@ function inlineBodyStyles(html: string) {
     p: "margin:0 0 16px;font-size:16px;line-height:1.65;color:#2b2d31;",
     h2: "margin:28px 0 12px;font-family:Georgia,serif;font-size:24px;font-weight:500;line-height:1.25;color:#101113;",
     h3: "margin:24px 0 10px;font-family:Georgia,serif;font-size:19px;font-weight:500;color:#101113;",
-    blockquote: "margin:20px 0;padding:4px 0 4px 18px;border-left:2px solid #B4863C;font-family:Georgia,serif;font-style:italic;color:#2b2d31;",
+    blockquote: "margin:24px 0;padding:14px 0 0;border-top:2px solid #B4863C;font-family:Georgia,serif;font-style:italic;color:#2b2d31;",
     ul: "margin:0 0 16px;padding-left:22px;",
     ol: "margin:0 0 16px;padding-left:22px;",
     li: "margin:0 0 6px;font-size:16px;line-height:1.6;color:#2b2d31;",
@@ -45,7 +45,7 @@ function absoluteMedia(html: string) {
   return html.replace(/src="\/media\//g, `src="${SITE_URL}/media/`);
 }
 
-export function renderPostEmail(post: Mailable, token: string) {
+export function renderPostEmail(post: Mailable, token: string, firstName = "") {
   const url = `${SITE_URL}/minutes/${post.slug}`;
   const date = post.publishedAt ? formatDate(post.publishedAt) : "";
   const cover = post.coverImage
@@ -55,13 +55,15 @@ export function renderPostEmail(post: Mailable, token: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EE;"><tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
 <tr><td style="background:#0A0B0D;padding:22px 32px;">
-  <span style="display:inline-block;border:1px solid #8a6a36;padding:5px 12px;font-family:Georgia,serif;font-size:17px;color:#EDEEEC;">Apex</span>
+  <img src="${SITE_URL}/brand/apex-mark-dark.png" width="44" height="29" alt="" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0;">
+  <span style="display:inline-block;vertical-align:middle;border:1px solid #8a6a36;padding:5px 12px;font-family:Georgia,serif;font-size:17px;color:#EDEEEC;">Apex</span>
   <span style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#9CA0A0;margin-left:12px;">THE MASTERMIND MINUTES</span>
 </td></tr>
 <tr><td style="padding:36px 32px 8px;">
   ${cover}
   <p style="margin:0 0 10px;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8A6220;">${esc(date)}</p>
   <h1 style="margin:0 0 20px;font-family:Georgia,serif;font-size:30px;font-weight:500;line-height:1.2;color:#101113;">${esc(post.title)}</h1>
+  ${firstName ? `<p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#2b2d31;">Hi ${esc(firstName)},</p>` : ""}
   ${inlineBodyStyles(cleanHtml(post.bodyHtml))}
   <p style="margin:28px 0 8px;"><a href="${url}" style="display:inline-block;background:#0A0B0D;color:#EDEEEC;font-family:'Courier New',monospace;font-size:13px;letter-spacing:1px;text-decoration:none;padding:12px 20px;">Read on the site</a></p>
 </td></tr>
@@ -96,7 +98,7 @@ export async function sendPostToSubscribers(post: Mailable): Promise<{ sent: num
 
   const subscribers = await prisma.subscriber.findMany({
     where: { status: "ACTIVE" },
-    select: { email: true, token: true },
+    select: { email: true, token: true, firstName: true },
   });
   const resend = new Resend(apiKey);
   let sent = 0;
@@ -109,7 +111,7 @@ export async function sendPostToSubscribers(post: Mailable): Promise<{ sent: num
     try {
       ({ error } = await resend.batch.send(
       chunk.map((s) => {
-        const { html, text } = renderPostEmail(post, s.token);
+        const { html, text } = renderPostEmail(post, s.token, s.firstName);
         return {
           from,
           to: s.email,

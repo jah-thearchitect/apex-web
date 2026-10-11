@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { SITE_NAME } from "@/lib/site";
 
@@ -8,6 +10,7 @@ export const contentType = "image/png";
 // Share image: the hero, simplified. Ink background, platinum glow, gold
 // brand box. System serif keeps it dependency-free.
 export default function OpengraphImage() {
+  const mark = `data:image/svg+xml;base64,${readFileSync(join(process.cwd(), "public/brand/apex-mark-dark.svg")).toString("base64")}`;
   return new ImageResponse(
     (
       <div
@@ -24,6 +27,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={mark} width={92} height={60} alt="" />
           <div style={{ border: "2px solid rgba(180,134,60,0.6)", padding: "8px 22px", fontSize: 40 }}>Apex</div>
           <div style={{ fontSize: 20, letterSpacing: 5, color: "#9CA0A0" }}>BRAND MANAGEMENT FIRM</div>
         </div>

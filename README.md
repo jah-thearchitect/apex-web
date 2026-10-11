@@ -58,7 +58,7 @@ The header, overlay menu and footer are shared (`components/`). Every page excep
 | `INQUIRY_TO_EMAIL` | Where inquiries are delivered (server-only) |
 | `NEWSLETTER_FROM_EMAIL` | Sender for Minutes emails (falls back to `RESEND_FROM_EMAIL`) |
 
-If Resend isn't configured, the inquiry form tells the visitor honestly that nothing was sent (HTTP 503).
+Inquiries are saved to Contacts first, then emailed. The visitor sees an error only if both the save and the email fail.
 
 ## Open items
 

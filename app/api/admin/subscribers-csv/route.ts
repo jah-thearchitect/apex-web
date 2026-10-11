@@ -10,9 +10,9 @@ export async function GET() {
   const subs = await prisma.subscriber.findMany({ orderBy: { createdAt: "asc" } });
   const q = (v: string) => `"${v.replace(/"/g, '""')}"`;
   const rows = [
-    "email,status,source,joined,unsubscribed",
+    "first_name,last_name,email,status,source,joined,unsubscribed",
     ...subs.map((s) =>
-      [q(s.email), s.status.toLowerCase(), q(s.source ?? ""), s.createdAt.toISOString(), s.unsubscribedAt?.toISOString() ?? ""].join(",")
+      [q(s.firstName), q(s.lastName ?? ""), q(s.email), s.status.toLowerCase(), q(s.source ?? ""), s.createdAt.toISOString(), s.unsubscribedAt?.toISOString() ?? ""].join(",")
     ),
   ];
   return new NextResponse(rows.join("\n") + "\n", {
