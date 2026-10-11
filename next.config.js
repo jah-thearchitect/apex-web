@@ -1,11 +1,17 @@
 // Fonts are self-hosted by next/font and analytics loads from our own
 // origin, so the site needs nothing from third-party hosts at runtime.
+// Dev only: React's debugging needs eval, and @vercel/analytics loads its
+// debug script from va.vercel-scripts.com instead of /_vercel/insights.
+const isDev = process.env.NODE_ENV === "development";
+
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      isDev
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
+        : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
