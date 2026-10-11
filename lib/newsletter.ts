@@ -55,8 +55,8 @@ export function renderPostEmail(post: Mailable, token: string, firstName = "") {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EE;"><tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
 <tr><td style="background:#0A0B0D;padding:22px 32px;">
-  <img src="${SITE_URL}/brand/apex-mark-dark.png" width="44" height="29" alt="" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0;">
   <span style="display:inline-block;vertical-align:middle;border:1px solid #8a6a36;padding:5px 12px;font-family:Georgia,serif;font-size:17px;color:#EDEEEC;">Apex</span>
+  <img src="${SITE_URL}/brand/apex-mark-dark.png" width="44" height="29" alt="" style="display:inline-block;vertical-align:middle;margin-left:10px;border:0;">
   <span style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;color:#9CA0A0;margin-left:12px;">THE MASTERMIND MINUTES</span>
 </td></tr>
 <tr><td style="padding:36px 32px 8px;">

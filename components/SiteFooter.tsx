@@ -7,10 +7,10 @@ export function SiteFooter() {
     <footer>
       <div className="wrap foot-grid">
         <div>
-          <span className="brand">
-            <LogoMark width={46} />
+          <Link className="brand" href="/" aria-label="Apex Capital Consultants, home">
             <span className="brand-box">Apex</span>
-          </span>
+            <LogoMark width={46} />
+          </Link>
           <p className="foot-tagline">{TAGLINE}</p>
         </div>
         <div className="foot-col">

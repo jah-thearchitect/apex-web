@@ -36,8 +36,8 @@ export function SiteHeader({ showHome = true }: { showHome?: boolean }) {
         </div>
         <div className="wrap nav-row">
           <Link className="brand" href="/" aria-label="Apex Capital Consultants, home">
-            <LogoMark width={46} />
             <span className="brand-box">Apex</span>
+            <LogoMark width={46} />
             <span className="brand-sub">BRAND&nbsp;MANAGEMENT&nbsp;FIRM</span>
           </Link>
           <div className="nav-right">
@@ -63,10 +63,10 @@ export function SiteHeader({ showHome = true }: { showHome?: boolean }) {
 
       <div className={`overlay${open ? " open" : ""}`} id="overlayMenu" aria-hidden={!open}>
         <div className="overlay-top">
-          <span className="brand">
-            <LogoMark width={46} />
+          <Link className="brand" href="/" aria-label="Apex Capital Consultants, home" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>
             <span className="brand-box">Apex</span>
-          </span>
+            <LogoMark width={46} />
+          </Link>
           <button className="menu-btn" aria-label="Close menu" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>
             <span className="bars"><span /><span /></span> Close
           </button>

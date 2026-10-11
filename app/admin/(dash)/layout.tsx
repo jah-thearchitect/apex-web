@@ -10,8 +10,8 @@ export default async function AdminDash({ children }: { children: React.ReactNod
       <header className="admin-bar">
         <div className="wrap admin-bar-row">
           <Link className="brand" href="/admin">
-            <LogoMark width={40} />
             <span className="brand-box">Apex</span>
+            <LogoMark width={40} />
             <span className="brand-sub">ADMIN</span>
           </Link>
           <nav className="admin-nav">

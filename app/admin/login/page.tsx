@@ -10,8 +10,8 @@ export default async function AdminLogin() {
   return (
     <main className="admin-login">
       <a className="brand" href="/">
-        <LogoMark width={46} />
         <span className="brand-box">Apex</span>
+        <LogoMark width={46} />
       </a>
       <div className="inquiry-panel">
         <p className="eyebrow">ADMIN</p>
