@@ -37,14 +37,19 @@ function inlineBodyStyles(html: string) {
     img: "display:block;max-width:100%;height:auto;margin:20px 0;",
     hr: "border:none;border-top:1px solid #e3e3de;margin:28px 0;",
   };
-  return html.replace(/<(p|h2|h3|blockquote|ul|ol|li|a|img|hr)(\s|>|\/)/g, (_m, tag: string, next: string) => `<${tag} style="${styles[tag]}"${next}`);
+  return absoluteMedia(html).replace(/<(p|h2|h3|blockquote|ul|ol|li|a|img|hr)(\s|>|\/)/g, (_m, tag: string, next: string) => `<${tag} style="${styles[tag]}"${next}`);
+}
+
+// Images are stored as site paths (/media/...); email needs full URLs.
+function absoluteMedia(html: string) {
+  return html.replace(/src="\/media\//g, `src="${SITE_URL}/media/`);
 }
 
 export function renderPostEmail(post: Mailable, token: string) {
   const url = `${SITE_URL}/minutes/${post.slug}`;
   const date = post.publishedAt ? formatDate(post.publishedAt) : "";
   const cover = post.coverImage
-    ? `<img src="${esc(post.coverImage)}" alt="" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 28px;">`
+    ? `<img src="${esc(SITE_URL + post.coverImage)}" alt="" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 28px;">`
     : "";
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#F1F1EE;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EE;"><tr><td align="center" style="padding:32px 16px;">

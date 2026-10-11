@@ -66,7 +66,7 @@ export async function savePost(input: PostInput): Promise<SaveResult> {
     title,
     slug,
     excerpt: input.excerpt.trim().slice(0, 400),
-    coverImage: input.coverImage?.startsWith("https://") ? input.coverImage : null,
+    coverImage: input.coverImage?.startsWith("/media/minutes/") ? input.coverImage : null,
     bodyHtml: cleanHtml(input.bodyHtml),
   };
 

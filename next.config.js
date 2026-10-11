@@ -13,10 +13,10 @@ const securityHeaders = [
         ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
         : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      // Post images live in Vercel Blob; admin uploads go browser -> Blob.
-      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
+      // Post images are served from our own /media route, not Blob URLs.
+      "img-src 'self' data: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https://vercel.com https://*.blob.vercel-storage.com",
+      "connect-src 'self'",
       // Google Calendar appointment booking embedded on /consultation.
       "frame-src https://calendar.google.com",
       "object-src 'none'",

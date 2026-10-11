@@ -14,10 +14,11 @@ const SANITIZE: sanitizeHtml.IOptions = {
     img: ["src", "alt"],
   },
   allowedSchemes: ["https", "http", "mailto"],
-  allowedSchemesByTag: { img: ["https"] },
   transformTags: {
     a: sanitizeHtml.simpleTransform("a", { target: "_blank", rel: "noopener noreferrer" }),
   },
+  // Images only from our own uploads (served by /media/...).
+  exclusiveFilter: (frame) => frame.tag === "img" && !String(frame.attribs.src ?? "").startsWith("/media/minutes/"),
 };
 
 export function cleanHtml(html: string) {
