@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRing } from "@/components/ArrowRing";
 import { InquiryForm } from "@/components/InquiryForm";
 import { PageShell } from "@/components/PageShell";
-import { FeatureImage } from "@/components/SiteImages";
+import { PhotoHero } from "@/components/SiteImages";
 import { BOOKING_EMBED_URL, BOOKING_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -13,16 +13,11 @@ export const metadata: Metadata = {
 export default function ConsultationPage() {
   return (
     <PageShell>
-      <section className="page-hero" style={{ paddingBottom: 0 }}>
-        <div className="wrap">
+      <PhotoHero src="/images/consult-table.webp">
           <p className="eyebrow">CONSULTATION</p>
           <h1>Start With a Conversation.</h1>
           <p>Tell us where your business stands today, and which discipline you need first.</p>
-          <div style={{ marginTop: "clamp(32px, 5vw, 48px)" }} className="feature-img-wrap">
-            <FeatureImage src="/images/consult-table.webp" />
-          </div>
-        </div>
-      </section>
+      </PhotoHero>
 
       {/* Scheduling: Google Calendar appointment schedule (lib/site.ts). Until
           the link is set, the panel points at the inquiry form instead. */}

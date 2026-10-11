@@ -7,7 +7,7 @@ import { PageShell } from "@/components/PageShell";
 
 const TEASERS = [
   { href: "/firm", img: "/images/firm-blueprint.webp", tag: "The Firm", title: "Who We Are", body: "How Apex operates, and the standard every build is held to." },
-  { href: "/what-we-do", img: "/images/line-platforms.webp", tag: "What We Do", title: "Six Disciplines", body: "Platforms, marketing, AI, funding, and everything between — start wherever you are." },
+  { href: "/what-we-do", img: "/images/six-disciplines.webp", tag: "What We Do", title: "Six Disciplines", body: "Platforms, marketing, AI, funding, and everything between — start wherever you are." },
   { href: "/clients", img: "/images/clients-skyline.webp", tag: "Clients", title: "Real Businesses, Real Builds", body: "Any sector, any stage — built for owners serious about expanding." },
 ];
 

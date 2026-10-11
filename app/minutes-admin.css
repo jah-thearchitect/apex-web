@@ -81,6 +81,18 @@
 /* Home teasers get a thumbnail. */
 .teaser-img{ width: calc(100% + 56px); margin: -32px -28px 6px; aspect-ratio: 16 / 9; object-fit: cover; display: block; height: auto; }
 
+/* Menu: line art beside each option. */
+.overlay-links a{ display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.overlay-art{ width: clamp(96px, 14vw, 168px); height: auto; aspect-ratio: 16 / 9; object-fit: cover; flex: none; border: 1px solid var(--line-ink); opacity: .85; transition: opacity .18s ease, border-color .18s ease; }
+.overlay-links a:hover .overlay-art{ opacity: 1; border-color: var(--gold); }
+
+/* Section with faint blueprint art behind it (How We Work). */
+.bg-art{ position: relative; overflow: hidden; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+.bg-art-img{ object-fit: cover; z-index: 0; opacity: .9; }
+.bg-art::after{ content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, var(--ink) 0%, rgba(10,11,13,0) 18%, rgba(10,11,13,0) 82%, var(--ink) 100%); }
+.bg-art-copy{ position: relative; z-index: 1; }
+
 /* ---------- NEWSLETTER: NAME FIELDS ---------- */
 .nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
 .nl-form .nl-names input{

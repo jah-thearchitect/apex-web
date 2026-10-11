@@ -81,8 +81,13 @@ export default function WhatWeDoPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="sub-head" id="how-we-work">
+      <section className="bg-art" id="how-we-work">
+        <Image src="/images/bg-blueprint.webp" alt="" fill sizes="100vw" className="bg-art-img" />
+        <div className="wrap bg-art-copy">
+          <div className="sub-head" style={{ marginTop: 0 }}>
             <span className="tag">How We Work</span>
             <h3>No One-Off Builds</h3>
           </div>

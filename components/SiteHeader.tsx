@@ -1,16 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { TAGLINE } from "@/lib/site";
 import { LogoMark } from "@/components/LogoMark";
 
 const NAV = [
-  { href: "/firm", label: "The Firm" },
-  { href: "/what-we-do", label: "What We Do" },
-  { href: "/clients", label: "Clients" },
-  { href: "/minutes", label: "The Minutes" },
-  { href: "/consultation", label: "Consultation" },
+  { href: "/firm", label: "The Firm", img: "/images/menu-firm.webp" },
+  { href: "/what-we-do", label: "What We Do", img: "/images/line-platforms.webp" },
+  { href: "/clients", label: "Clients", img: "/images/menu-clients.webp" },
+  { href: "/minutes", label: "The Minutes", img: "/images/menu-minutes.webp" },
+  { href: "/consultation", label: "Consultation", img: "/images/menu-consult.webp" },
 ];
 
 // Interior pages get the "← Home" link next to Menu. It was added to fix a
@@ -73,7 +74,8 @@ export function SiteHeader({ showHome = true }: { showHome?: boolean }) {
         <nav className="overlay-links">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>
-              {item.label}
+              <span>{item.label}</span>
+              <Image src={item.img} alt="" width={320} height={180} sizes="160px" className="overlay-art" />
             </Link>
           ))}
         </nav>
