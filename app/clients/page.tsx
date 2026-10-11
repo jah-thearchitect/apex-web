@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
+import { FeatureImage, PhotoHero } from "@/components/SiteImages";
 
 export const metadata: Metadata = {
   title: "Clients",
@@ -33,17 +34,15 @@ const BUILDS = [
 export default function ClientsPage() {
   return (
     <PageShell>
-      <section className="page-hero">
-        <div className="wrap">
+      <PhotoHero src="/images/photo-lobby.webp" position="center 40%">
           <p className="eyebrow">CLIENTS</p>
           <h1>Real Businesses, Real Builds</h1>
           <p>
             Apex works with business owners serious about expanding &mdash; whatever the business, whatever stage it&rsquo;s in. The sector isn&rsquo;t the qualifier. The readiness to grow is.
           </p>
-        </div>
-      </section>
+      </PhotoHero>
 
-      <section className="on-paper" style={{ paddingTop: 0 }}>
+      <section className="on-paper">
         <div className="wrap">
           <div className="section-head">
             <p className="eyebrow">WHO QUALIFIES</p>
@@ -63,6 +62,9 @@ export default function ClientsPage() {
 
       <section>
         <div className="wrap">
+          <div style={{ marginBottom: "clamp(40px, 6vw, 64px)" }}>
+            <FeatureImage src="/images/clients-skyline.webp" />
+          </div>
           <div className="section-head">
             <p className="eyebrow">SELECTED BUILDS</p>
             <h2>Client Builds</h2>

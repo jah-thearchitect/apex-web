@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowRing } from "@/components/ArrowRing";
 import { InquiryForm } from "@/components/InquiryForm";
 import { PageShell } from "@/components/PageShell";
+import { FeatureImage } from "@/components/SiteImages";
 import { BOOKING_EMBED_URL, BOOKING_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -17,6 +18,9 @@ export default function ConsultationPage() {
           <p className="eyebrow">CONSULTATION</p>
           <h1>Start With a Conversation.</h1>
           <p>Tell us where your business stands today, and which discipline you need first.</p>
+          <div style={{ marginTop: "clamp(32px, 5vw, 48px)" }} className="feature-img-wrap">
+            <FeatureImage src="/images/consult-table.webp" />
+          </div>
         </div>
       </section>
 

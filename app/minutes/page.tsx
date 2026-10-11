@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRing } from "@/components/ArrowRing";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { PageShell } from "@/components/PageShell";
+import { PhotoHero } from "@/components/SiteImages";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 
@@ -22,13 +23,11 @@ export default async function MinutesIndex() {
 
   return (
     <PageShell>
-      <section className="page-hero">
-        <div className="wrap">
+      <PhotoHero src="/images/minutes-notebook.webp" position="center 60%">
           <p className="eyebrow">THE MASTERMIND MINUTES</p>
           <h1>A few minutes that sharpen how you run your business.</h1>
           <p>Short, direct reads on scaling, branding, and capital &mdash; the kind of thinking that puts you ahead before your competitors catch on.</p>
-        </div>
-      </section>
+      </PhotoHero>
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">

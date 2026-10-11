@@ -1,35 +1,43 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { PageShell } from "@/components/PageShell";
+import { PhotoHero } from "@/components/SiteImages";
 
 export const metadata: Metadata = {
   title: "What We Do",
   description: "The Six Disciplines: structuring, websites & platforms, marketing & visibility, app development, AI integration, and business funding — one accountable firm.",
 };
 
-const DISCIPLINES: { title: string; body: string; caps?: string[] }[] = [
+const DISCIPLINES: { title: string; body: string; art: string; caps?: string[] }[] = [
   {
     title: "Business Structuring & Incorporating",
+    art: "/images/line-structuring.webp",
     body: "Entity formation, structuring, and the paperwork that protects what you build — settled before anything else gets built on top of it.",
   },
   {
     title: "Business Websites & Platforms",
+    art: "/images/line-platforms.webp",
     body: "We call it a website. We build it as a platform — the enterprise-level system your business runs on, not just a page that describes it: clear positioning, real conversion paths, e-commerce when you're selling directly, and the craft to hold up under scrutiny.",
   },
   {
     title: "Marketing & Visibility",
+    art: "/images/line-marketing.webp",
     body: "Positioning, content, and campaigns that get a platform in front of the people who need it — built with the same systems-first approach as everything else the firm builds, not bolted on after the fact.",
     caps: ["SEO", "Paid Ads Management", "Social Content", "CRM & Marketing Automation", "Brand Identity & Design Systems", "Analytics & Reporting"],
   },
   {
     title: "Business App Development",
+    art: "/images/line-apps.webp",
     body: "Client portals, booking systems, and internal platforms built around how your business actually operates — systems that function and grow with you, not templates you outgrow.",
   },
   {
     title: "Business AI Integration",
+    art: "/images/line-ai.webp",
     body: "Agents and systems that streamline the repeatable work and turn it into leverage — built to expand what a business can do and capitalize on it financially, not just automate for its own sake.",
   },
   {
     title: "Business Funding",
+    art: "/images/line-funding.webp",
     body: "Access to lenders and financing partners for the businesses that need capital to execute on the disciplines above.",
   },
 ];
@@ -44,21 +52,19 @@ const STEPS = [
 export default function WhatWeDoPage() {
   return (
     <PageShell>
-      <section className="page-hero">
-        <div className="wrap">
+      <PhotoHero src="/images/photo-office.webp">
           <p className="eyebrow">WHAT WE DO</p>
           <h1>The Six Disciplines</h1>
           <p>
             Every discipline stands on its own. You don&rsquo;t have to start with structuring &mdash; begin wherever your business is today, and Apex meets you there. Plan, build, market, fund, and grow &mdash; one accountable firm instead of five different vendors.
           </p>
-        </div>
-      </section>
+      </PhotoHero>
 
       <section style={{ paddingTop: 0 }}>
         <div className="wrap">
           <div className="disciplines">
             {DISCIPLINES.map((d, i) => (
-              <div className="discipline" key={d.title}>
+              <div className="discipline has-art" key={d.title}>
                 <span className="tag">{String(i + 1).padStart(2, "0")}</span>
                 <div>
                   <h3>{d.title}</h3>
@@ -71,6 +77,7 @@ export default function WhatWeDoPage() {
                     </div>
                   )}
                 </div>
+                <Image src={d.art} alt="" width={560} height={315} sizes="(max-width: 900px) 420px, 280px" className="discipline-art" />
               </div>
             ))}
           </div>

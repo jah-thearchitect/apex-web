@@ -39,6 +39,48 @@
 .prose code{ font-family: var(--font-mono); font-size: 0.9em; background: var(--ink-3); padding: 0.1em 0.35em; }
 .prose pre{ background: var(--ink-2); padding: 16px; overflow-x: auto; }
 
+/* ---------- SITE IMAGERY ---------- */
+/* Home hero: cinematic still bleeds edge to edge, copy sits on the dark left. */
+.hero.hero-has-img{ margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); min-height: min(78vh, 760px); display: flex; align-items: center; }
+.hero-img{ object-fit: cover; object-position: right center; z-index: 0; }
+.hero-shade{ position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--ink) 0%, rgba(10,11,13,.92) 30%, rgba(10,11,13,.45) 62%, rgba(10,11,13,.1) 100%),
+    linear-gradient(0deg, var(--ink) 0%, rgba(10,11,13,0) 30%),
+    linear-gradient(180deg, var(--ink) 0%, rgba(10,11,13,0) 18%); }
+.hero.hero-has-img .hero-inner{ width: 100%; }
+.hero.hero-has-img .lede{ color: #B9BCBB; }
+@media (max-width: 760px){
+  .hero-img{ object-position: 72% center; }
+  .hero-shade{ background: linear-gradient(0deg, var(--ink) 8%, rgba(10,11,13,.82) 55%, rgba(10,11,13,.55) 100%); }
+}
+
+/* Interior page header over a bright photo, darkened so copy stays legible. */
+.photo-hero{ position: relative; overflow: hidden; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); padding-block: clamp(80px,12vw,140px) clamp(48px,7vw,80px); }
+.photo-hero-img{ object-fit: cover; z-index: 0; }
+.photo-hero-shade{ position: absolute; inset: 0; z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(10,11,13,.94) 0%, rgba(10,11,13,.8) 45%, rgba(10,11,13,.5) 100%),
+    linear-gradient(0deg, var(--ink) 0%, rgba(10,11,13,0) 45%); }
+.photo-hero-copy{ position: relative; z-index: 1; }
+.photo-hero .eyebrow{ color: var(--on-ink-soft); }
+.photo-hero p{ color: #C2C5C4; }
+
+/* Wide cinematic band. */
+.feature-img{ margin: 0; position: relative; }
+.feature-img img{ width: 100%; height: auto; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+.feature-img.short img{ aspect-ratio: 21 / 9; }
+.feature-img figcaption{ font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-ink-faint); margin-top: 12px; }
+
+/* Six Disciplines: line art beside each entry. */
+.discipline.has-art{ grid-template-columns: 90px 1fr 280px; align-items: start; }
+.discipline-art{ width: 100%; height: auto; display: block; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--line-ink); }
+@media (max-width: 900px){ .discipline.has-art{ grid-template-columns: 90px 1fr; } .discipline-art{ grid-column: 2; max-width: 420px; margin-top: 8px; } }
+@media (max-width: 640px){ .discipline.has-art{ grid-template-columns: 1fr; } .discipline-art{ grid-column: auto; } }
+
+/* Home teasers get a thumbnail. */
+.teaser-img{ width: calc(100% + 56px); margin: -32px -28px 6px; aspect-ratio: 16 / 9; object-fit: cover; display: block; height: auto; }
+
 /* ---------- NEWSLETTER: NAME FIELDS ---------- */
 .nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
 .nl-form .nl-names input{

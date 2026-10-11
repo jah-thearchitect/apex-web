@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
+import { FeatureImage } from "@/components/SiteImages";
 
 export const metadata: Metadata = {
   title: "The Firm",
@@ -31,6 +32,12 @@ export default function FirmPage() {
               &ldquo;Every build is held to one standard: it has to be a genuinely good experience for whoever touches it &mdash; the business owner, their customer, or the software doing the work.&rdquo;
             </p>
           </div>
+        </div>
+      </section>
+
+      <section style={{ paddingTop: 0 }}>
+        <div className="wrap">
+          <FeatureImage src="/images/firm-blueprint.webp" />
         </div>
       </section>
 
