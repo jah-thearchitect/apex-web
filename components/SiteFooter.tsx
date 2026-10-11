@@ -14,6 +14,7 @@ export function SiteFooter() {
           <ul>
             <li><Link href="/what-we-do">The Six Disciplines</Link></li>
             <li><Link href="/what-we-do#how-we-work">How We Work</Link></li>
+            <li><Link href="/minutes">The Mastermind Minutes</Link></li>
           </ul>
         </div>
         <div className="foot-col">
@@ -31,6 +32,7 @@ export function SiteFooter() {
         <span className="foot-legal">
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
+          <Link href="/admin" rel="nofollow">Admin</Link>
         </span>
       </div>
     </footer>

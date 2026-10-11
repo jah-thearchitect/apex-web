@@ -4,30 +4,61 @@ import { useState } from "react";
 
 export const SUBSCRIBED_KEY = "apex_mastermind_subscribed";
 
-// Mastermind Minutes signup: no email list provider is chosen yet, so this
-// doesn't pretend to save anything. It just confirms receipt honestly.
-// Swap for the real provider once one is picked.
-export function NewsletterForm({ buttonLabel, onSubscribed }: { buttonLabel: string; onSubscribed?: () => void }) {
+export function NewsletterForm({
+  buttonLabel,
+  source,
+  onSubscribed,
+}: {
+  buttonLabel: string;
+  source: string;
+  onSubscribed?: () => void;
+}) {
   const [status, setStatus] = useState("");
+  const [sending, setSending] = useState(false);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const email = (new FormData(form).get("email") as string | null)?.trim();
-    if (!email) return;
-    setStatus("Thanks — you’re on the list. The Minutes will start landing once our email service is fully connected.");
+    const data = Object.fromEntries(new FormData(form));
+    setSending(true);
+    setStatus("");
     try {
-      window.localStorage.setItem(SUBSCRIBED_KEY, "1");
-    } catch {}
-    form.reset();
-    onSubscribed?.();
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, source }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setStatus(json.error ?? "Something went wrong and you weren’t added. Please try again.");
+        return;
+      }
+      setStatus("You’re on the list. New Minutes will land in your inbox.");
+      try {
+        window.localStorage.setItem(SUBSCRIBED_KEY, "1");
+      } catch {}
+      form.reset();
+      onSubscribed?.();
+    } catch {
+      setStatus("Something went wrong and you weren’t added. Please try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
     <>
       <form className="nl-form" onSubmit={onSubmit}>
-        <input type="email" name="email" required placeholder="you@business.com" aria-label="Email address" />
-        <button type="submit" className="btn-solid">{buttonLabel}</button>
+        <input type="email" name="email" required maxLength={254} placeholder="you@business.com" aria-label="Email address" />
+        <div className="hp-field" aria-hidden="true">
+          <label>
+            Company website
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
+        <button type="submit" className="btn-solid" disabled={sending}>
+          {sending ? "Joining…" : buttonLabel}
+        </button>
       </form>
       <p className="nl-status" role="status">{status}</p>
     </>

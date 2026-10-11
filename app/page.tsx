@@ -78,7 +78,7 @@ export default function Home() {
                 <p>Short, direct reads on scaling, branding, and capital &mdash; the kind of thinking that puts you ahead before your competitors catch on.</p>
               </div>
               <div>
-                <NewsletterForm buttonLabel="Join the Minutes" />
+                <NewsletterForm buttonLabel="Join the Minutes" source="home" />
                 <p className="nl-note">We&rsquo;ll only use this to send the Minutes. Unsubscribe anytime.</p>
               </div>
             </div>

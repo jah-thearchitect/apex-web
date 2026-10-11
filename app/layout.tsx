@@ -3,6 +3,7 @@ import { Newsreader, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
+import "./minutes-admin.css";
 
 const newsreader = Newsreader({
   subsets: ["latin"],

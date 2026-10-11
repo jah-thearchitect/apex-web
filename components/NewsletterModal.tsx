@@ -47,7 +47,7 @@ export function NewsletterModal() {
         <p className="eyebrow">THE MASTERMIND MINUTES</p>
         <h3 id="mmTitle">Get the Minutes before you leave.</h3>
         <p>A few minutes on scaling, branding, and capital &mdash; straight to your inbox, no fluff.</p>
-        {open && <NewsletterForm buttonLabel="Join" />}
+        {open && <NewsletterForm buttonLabel="Join" source="popup" />}
       </div>
     </div>
   );

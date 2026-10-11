@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { ArrowRing } from "@/components/ArrowRing";
 import { InquiryForm } from "@/components/InquiryForm";
 import { PageShell } from "@/components/PageShell";
+import { BOOKING_EMBED_URL, BOOKING_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Consultation",
@@ -18,10 +20,23 @@ export default function ConsultationPage() {
         </div>
       </section>
 
-      {/* Scheduling: the Google Calendar Appointment Schedules link goes here
-          once the owner sends it. Until then the CTA points at the inquiry form. */}
+      {/* Scheduling: Google Calendar appointment schedule (lib/site.ts). Until
+          the link is set, the panel points at the inquiry form instead. */}
       <section>
         <div className="wrap">
+          {BOOKING_URL ? (
+            <div className="booking">
+              <div className="booking-head">
+                <span className="tag">Book a time</span>
+                <a className="arrow-link" href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+                  Open in Google Calendar <ArrowRing />
+                </a>
+              </div>
+              {BOOKING_EMBED_URL && (
+                <iframe className="booking-frame" src={BOOKING_EMBED_URL} title="Book a consultation" loading="lazy" />
+              )}
+            </div>
+          ) : (
           <div className="consult-panel">
             <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.4" stroke="currentColor" aria-hidden="true">
               <rect x="3" y="5" width="18" height="16" rx="1" />
@@ -31,6 +46,7 @@ export default function ConsultationPage() {
             <p>A live calendar is being connected here. In the meantime, tell us what you want built below and the firm will follow up to set a time.</p>
             <a className="btn-solid" href="#inquiry">Tell Us What You Want Built</a>
           </div>
+          )}
         </div>
       </section>
 

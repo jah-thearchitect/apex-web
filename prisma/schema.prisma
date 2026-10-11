@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Site admins. Created only with `npm run admin:create` (prompts for the
+// password locally, stores a bcrypt hash). There is no sign-up page.
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// Failed admin sign-in attempts per email. Cleared on success; once
+// `attempts` hits the limit, sign-in is refused until `lockedUntil`.
+model LoginAttempt {
+  email       String    @id
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+}
+
+// Mastermind Minutes list. `token` is the secret in each email's
+// unsubscribe link, so it must never be shown anywhere else.
+model Subscriber {
+  id             String           @id @default(cuid())
+  email          String           @unique
+  status         SubscriberStatus @default(ACTIVE)
+  token          String           @unique @default(cuid())
+  source         String?
+  createdAt      DateTime         @default(now())
+  unsubscribedAt DateTime?
+}
+
+// A Mastermind Minutes post. Body is HTML from the admin editor and is
+// sanitized again on every render. `sentAt` is set once when the post is
+// emailed; a post is never emailed twice.
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String    @default("")
+  coverImage  String?
+  bodyHtml    String    @default("")
+  publishedAt DateTime?
+  sentAt      DateTime?
+  sentCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
