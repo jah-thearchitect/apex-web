@@ -46,7 +46,7 @@ export default async function InvoicePage({
         <span className="doc-hint">{isAdmin && inv.status === "DRAFT" ? "Draft preview" : "Secure invoice"}</span>
         <div className="row" style={{ display: "flex", gap: 10 }}>
           <PrintButton />
-          {payable && <PayButton token={inv.token} label={`Pay ${formatMoney(total)}`} />}
+          {payable && stripeConfigured() && <PayButton token={inv.token} label={`Pay ${formatMoney(total)}`} />}
         </div>
       </div>
 

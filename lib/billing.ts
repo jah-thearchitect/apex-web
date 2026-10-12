@@ -29,7 +29,9 @@ export function invoiceDisplayStatus(inv: { status: string; dueDate: Date }): Di
   if (inv.status === "PAID") return "Paid";
   if (inv.status === "VOID") return "Void";
   if (inv.status === "DRAFT") return "Draft";
-  if (inv.dueDate.getTime() < Date.now()) return "Overdue";
+  // Overdue only once the whole due day has passed, so "due on receipt"
+  // (due date = today) doesn't show as overdue the moment it's sent.
+  if (inv.dueDate.getTime() + 86_400_000 < Date.now()) return "Overdue";
   return inv.status === "VIEWED" ? "Viewed" : "Sent";
 }
 
