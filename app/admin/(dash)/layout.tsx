@@ -19,6 +19,7 @@ export default async function AdminDash({ children }: { children: React.ReactNod
             <Link href="/admin/clients">Clients</Link>
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/invoices">Invoices</Link>
+            <Link href="/admin/bookings">Bookings</Link>
             <span className="admin-nav-sep" aria-hidden="true" />
             <Link href="/admin/posts">Posts</Link>
             <Link href="/admin/contacts">Contacts</Link>

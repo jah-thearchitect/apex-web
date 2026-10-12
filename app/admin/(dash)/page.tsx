@@ -4,6 +4,8 @@ import { formatMoney, subtotal } from "@/lib/money";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import { stripeConfigured } from "@/lib/stripe";
+import { getBookingSettings } from "@/lib/booking";
+import { formatInZone } from "@/lib/tz";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Overview" };
@@ -25,6 +27,10 @@ export default async function AdminOverview() {
     }),
     prisma.client.count({ where: { status: "ACTIVE" } }),
     prisma.subscriber.count({ where: { status: "ACTIVE" } }),
+  ]);
+  const [calls, bookingSettings] = await Promise.all([
+    prisma.booking.findMany({ where: { status: "CONFIRMED", startAt: { gte: new Date() } }, orderBy: { startAt: "asc" }, take: 5 }),
+    getBookingSettings(),
   ]);
 
   const outstanding = open.reduce((s, i) => s + subtotal(i.items), 0);
@@ -53,6 +59,21 @@ export default async function AdminOverview() {
         <div className="stat"><span>Paid this month</span><strong>{formatMoney(paidThisMonth._sum.amountPaidCents ?? 0)}</strong><small>since {formatDate(monthStart)}</small></div>
         <div className="stat"><span>Active clients</span><strong>{clients}</strong><small>{subscribers} Minutes subscribers</small></div>
       </div>
+
+      <section className="overview-card" style={{ marginBottom: 32 }}>
+        <h2 className="admin-h2">Upcoming calls</h2>
+        {calls.length === 0 ? <p className="admin-empty">No calls booked.</p> : (
+          <table className="admin-table"><tbody>
+            {calls.map((c) => (
+              <tr key={c.id}>
+                <td>{formatInZone(c.startAt, bookingSettings.timezone, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
+                <td>{c.firstName} {c.lastName ?? ""}{c.businessName && <><br /><small>{c.businessName}</small></>}</td>
+                <td style={{ textAlign: "right" }}>{c.meetLink && <a href={c.meetLink} target="_blank" rel="noopener noreferrer">Meet</a>}</td>
+              </tr>
+            ))}
+          </tbody></table>
+        )}
+      </section>
 
       <div className="overview-grid">
         <section className="overview-card">

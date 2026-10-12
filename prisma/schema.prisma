@@ -265,3 +265,64 @@ model BusinessSettings {
   quoteTerms       String  @default("")
   updatedAt        DateTime @updatedAt
 }
+
+// ---------- Consultation booking ----------
+
+// Availability rules, edited in Admin -> Settings. `weeklyHours` is JSON
+// keyed by weekday (0 = Sunday): {"1": [["10:00","13:30"]], ...}, in `timezone`.
+// Defaults mirror the Google appointment schedule this replaced.
+model BookingSettings {
+  id             String   @id @default("singleton")
+  title          String   @default("Consultation")
+  description    String   @default("Connect with Apex to discuss your vision.")
+  timezone       String   @default("America/New_York")
+  durationMin    Int      @default(60)
+  bufferMin      Int      @default(15)
+  minNoticeHours Int      @default(72)
+  windowDays     Int      @default(14)
+  weeklyHours    String   @default("{\"0\":[],\"1\":[[\"10:00\",\"13:30\"]],\"2\":[[\"10:00\",\"13:30\"]],\"3\":[[\"10:00\",\"13:30\"]],\"4\":[[\"10:00\",\"13:30\"]],\"5\":[[\"10:00\",\"13:30\"]],\"6\":[[\"14:00\",\"17:30\"]]}")
+  updatedAt      DateTime @updatedAt
+}
+
+// The Google account the site books into. The refresh token is encrypted
+// at rest (AES-256-GCM); it lets the server read free/busy and create
+// events without the owner signing in each time.
+model GoogleConnection {
+  id                    String   @id @default("singleton")
+  email                 String
+  refreshTokenEncrypted String
+  calendarId            String   @default("primary")
+  connectedAt           DateTime @default(now())
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+// A booked consultation. `token` is the secret in the client's manage link
+// (/booking/<token>). `slotKey` is the start time while confirmed and null
+// once cancelled, so two confirmed bookings can't share a slot.
+model Booking {
+  id             String        @id @default(cuid())
+  token          String        @unique @default(cuid())
+  slotKey        String?       @unique
+  status         BookingStatus @default(CONFIRMED)
+  startAt        DateTime
+  endAt          DateTime
+  firstName      String
+  lastName       String?
+  email          String
+  phone          String?
+  businessName   String?
+  topic          String
+  contactId      String?
+  googleEventId  String?
+  meetLink       String?
+  reminderSentAt DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([startAt])
+}

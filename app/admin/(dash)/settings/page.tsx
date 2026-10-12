@@ -1,4 +1,5 @@
 import { deleteCatalogItem, saveCatalogItem, saveSettings } from "@/app/admin/billing-actions";
+import { BookingSettingsSection } from "@/components/admin/BookingSettingsSection";
 import { getSettings } from "@/lib/billing";
 import { formatMoney } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
@@ -8,7 +9,7 @@ import { stripeConfigured } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Settings" };
 
-export default async function Settings({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+export default async function Settings({ searchParams }: { searchParams: Promise<{ saved?: string; google?: string; bookingSaved?: string }> }) {
   const [s, catalog, sp] = await Promise.all([
     getSettings(),
     prisma.catalogItem.findMany({ orderBy: { name: "asc" } }),
@@ -91,6 +92,8 @@ export default async function Settings({ searchParams }: { searchParams: Promise
         <label className="field"><span>Details (optional)</span><input name="details" maxLength={2000} placeholder="Marketing, platform upkeep, AI systems, monthly report" /></label>
         <div className="editor-actions" style={{ alignSelf: "end" }}><button className="btn-ghost" type="submit">Add item</button></div>
       </form>
+
+      <BookingSettingsSection google={sp.google} saved={!!sp.bookingSaved} />
 
       <h2 className="admin-h2" style={{ marginTop: 48 }}>Online payments (Stripe)</h2>
       <ul className="check-list">

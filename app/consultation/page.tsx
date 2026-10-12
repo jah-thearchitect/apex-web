@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { ArrowRing } from "@/components/ArrowRing";
+import { BookingWidget } from "@/components/BookingWidget";
 import { InquiryForm } from "@/components/InquiryForm";
 import { PageShell } from "@/components/PageShell";
 import { PhotoHero } from "@/components/SiteImages";
-import { BOOKING_EMBED_URL, BOOKING_URL } from "@/lib/site";
+import { bookingEnabled, getBookingSettings } from "@/lib/booking";
 
 export const metadata: Metadata = {
   title: "Consultation",
   description: "Start with a conversation. Tell Apex where your business stands today and what you want built.",
 };
 
-export default function ConsultationPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ConsultationPage() {
+  const [enabled, settings] = await Promise.all([bookingEnabled(), getBookingSettings()]);
   return (
     <PageShell>
       <PhotoHero src="/images/consult-table.webp">
@@ -19,21 +22,18 @@ export default function ConsultationPage() {
           <p>Tell us where your business stands today, and which discipline you need first.</p>
       </PhotoHero>
 
-      {/* Scheduling: Google Calendar appointment schedule (lib/site.ts). Until
-          the link is set, the panel points at the inquiry form instead. */}
+      {/* On-site booking (lib/booking.ts) once a Google calendar is connected
+          in Admin -> Settings; until then the panel points at the inquiry form. */}
       <section>
         <div className="wrap">
-          {BOOKING_URL ? (
+          {enabled ? (
             <div className="booking">
-              <div className="booking-head">
-                <span className="tag">Book a time</span>
-                <a className="arrow-link" href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
-                  Open in Google Calendar <ArrowRing />
-                </a>
+              <div className="section-head" style={{ marginBottom: 28 }}>
+                <p className="eyebrow">BOOK A CONSULTATION</p>
+                <h2>Pick a Time That Works.</h2>
+                <p>{settings.durationMin} minutes by video. {settings.description}</p>
               </div>
-              {BOOKING_EMBED_URL && (
-                <iframe className="booking-frame" src={BOOKING_EMBED_URL} title="Book a consultation" loading="lazy" />
-              )}
+              <BookingWidget />
             </div>
           ) : (
           <div className="consult-panel">

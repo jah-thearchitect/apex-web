@@ -154,6 +154,43 @@
 .check-list li.ok::before{ content: "● "; color: var(--accent-bright); }
 .check-list code{ font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-bright); }
 
+/* ---------- ON-SITE BOOKING ---------- */
+.bk{ border: 1px solid var(--line-ink); background: var(--ink-2); padding: clamp(20px, 4vw, 36px); }
+.bk-empty{ color: var(--on-ink-soft); }
+.bk-head{ display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.bk-label{ font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-bright); }
+.bk-tz{ font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; color: var(--on-ink-faint); }
+.bk-days{ display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.bk-day{ flex: none; width: 76px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
+.bk-day:hover{ border-color: var(--accent); }
+.bk-day.on{ background: var(--accent); border-color: var(--accent); color: var(--ink); }
+.bk-dow, .bk-mon{ font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: .8; }
+.bk-date{ font-family: var(--font-serif); font-size: 1.6rem; line-height: 1.1; }
+.bk-times{ display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.bk-time{ padding: 0.9em 1em; background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-mono); font-size: 0.85rem; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
+.bk-time:hover{ border-color: var(--accent); }
+.bk-time.on{ background: var(--accent); border-color: var(--accent); color: var(--ink); }
+.bk-foot{ display: flex; justify-content: flex-end; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line-ink); }
+.bk-choice{ color: var(--on-ink); font-family: var(--font-serif); font-size: 1.1rem; margin-right: auto; }
+.bk-form .bk-choice{ display: block; margin: 0 0 18px; }
+.bk-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bk-grid input, .bk-grid textarea{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 0.95rem; padding: 0.85em 1em; width: 100%; }
+.bk-grid input::placeholder, .bk-grid textarea::placeholder{ color: var(--on-ink-faint); }
+.bk-grid .bk-wide{ grid-column: 1 / -1; }
+@media (max-width: 560px){ .bk-grid{ grid-template-columns: 1fr; } }
+.bk-link{ background: none; border: 0; padding: 0; color: var(--accent-bright); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; cursor: pointer; }
+.bk-link:hover{ color: var(--accent); }
+.bk-status{ margin-top: 14px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--gold-bright); }
+.bk-done h3{ font-family: var(--font-serif); font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 500; margin: 10px 0 8px; }
+.bk-done p{ color: var(--on-ink); margin-bottom: 8px; }
+.bk-done .bk-muted{ color: var(--on-ink-soft); margin-bottom: 18px; }
+.bk-manage{ display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.bk-inline-link{ color: var(--accent-bright); }
+.hours-grid{ display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line-ink); background: var(--ink-2); padding: 14px; }
+.hours-row{ display: grid; grid-template-columns: 150px 130px auto 130px; gap: 12px; align-items: center; color: var(--on-ink-soft); }
+.hours-row input[type="time"]{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); padding: 0.5em 0.7em; font-family: var(--font-mono); color-scheme: dark; }
+@media (max-width: 600px){ .hours-row{ grid-template-columns: 1fr 1fr; } .hours-row span{ display: none; } }
+
 /* ---------- NEWSLETTER: NAME FIELDS ---------- */
 .nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
 .nl-form .nl-names input{
