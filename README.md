@@ -19,7 +19,8 @@ The production build (`npm run build`) runs `prisma migrate deploy` first, so ev
 | `/what-we-do` | The Six Disciplines + How We Work |
 | `/clients` | Who Qualifies + Client Builds |
 | `/minutes`, `/minutes/[slug]` | The Mastermind Minutes blog |
-| `/consultation` | Booking (Google Calendar) + inquiry form |
+| `/consultation` | On-site booking (Google Calendar behind it) + inquiry form |
+| `/booking/[token]` | Client's private page to move or cancel a booked call |
 | `/privacy`, `/terms` | Legal pages (noindex) |
 | `/unsubscribe?token=…` | Confirms before unsubscribing (mail scanners follow links) |
 | `/admin` | Sign-in, posts, editor, subscribers (linked from the footer) |
@@ -38,6 +39,13 @@ The header, overlay menu and footer are shared (`components/`). Every page excep
 - **Unsubscribing.** Every email has its own unsubscribe link plus RFC 8058 one-click headers (`/api/unsubscribe`).
 - **Images.** Images are shrunk in the browser to at most 2000px, uploaded to the **private** Blob store, and served at `/media/minutes/…` with an immutable cache. The HTML sanitizer drops any image that isn't from `/media/minutes/`.
 - **Export.** The Subscribers page has a CSV export, for moving to Mailchimp or another provider later.
+
+## Consultation booking
+
+- The booking UI on `/consultation` is ours (`components/BookingWidget.tsx`); Google Calendar only supplies free/busy and holds the events. It appears once a calendar is connected in **Admin → Settings → Consultation booking**; until then the page shows the inquiry panel.
+- Slots = weekly hours in the firm's time zone, stepped by length + gap, after minimum notice, within the window, minus confirmed bookings and Google busy times (padded by the gap). If Google can't be reached, no slots are offered.
+- Booking creates the event with a Meet link (`sendUpdates=none`, so no Google invite), emails an Apex-branded confirmation with an `.ics`, alerts the firm, and records a `booking` contact. An hourly cron (`vercel.json`) sends a day-before reminder.
+- Local preview without Google: `BOOKING_PREVIEW=1` in `.env.local` (ignored in production).
 
 ## Hard content rules
 
@@ -62,7 +70,6 @@ Inquiries are saved to Contacts first, then emailed. The visitor sees an error o
 
 ## Open items
 
-1. **Booking sync.** The Consultation page embeds the Google Calendar appointment schedule (`BOOKING_URL` / `BOOKING_EMBED_URL` in `lib/site.ts`; the embed uses the address the short link resolves to, not the `/appointments/schedules/` form). Pulling bookers into Contacts automatically still needs the Google Cloud service-account setup.
 2. **Real inquiry fields.** The owner is sending his paper form. Replace the placeholder fields in `components/InquiryForm.tsx` and `app/api/inquiry/route.ts`.
 3. **Client logos.** Swap the text wordmarks in `app/clients/page.tsx` once the files arrive, and keep the same links.
 4. **Full privacy policy.** The current page accurately describes inquiries, the Minutes list and analytics. Expand it into a full policy once the inquiry fields are final.
