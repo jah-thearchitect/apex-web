@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "./prisma";
 
-export type ContactSource = "minutes" | "inquiry" | "booking";
+export type ContactSource = "minutes" | "inquiry" | "booking" | "client";
 
 /**
  * Creates or updates the contact for this email. Adds the source if new,

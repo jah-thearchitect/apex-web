@@ -76,7 +76,7 @@ export async function savePost(input: PostInput): Promise<SaveResult> {
 
   revalidatePath("/minutes");
   revalidatePath(`/minutes/${post.slug}`);
-  revalidatePath("/admin");
+  revalidatePath("/admin/posts");
   return { ok: true, id: post.id, slug: post.slug };
 }
 
@@ -98,7 +98,7 @@ export async function publishPost(id: string, sendEmail: boolean): Promise<Publi
     : await prisma.post.update({ where: { id }, data: { publishedAt: new Date() } });
   revalidatePath("/minutes");
   revalidatePath(`/minutes/${post.slug}`);
-  revalidatePath("/admin");
+  revalidatePath("/admin/posts");
 
   if (!sendEmail) return { ok: true, sent: 0, alreadySent: !!post.sentAt };
 
@@ -113,7 +113,7 @@ export async function publishPost(id: string, sendEmail: boolean): Promise<Publi
   }
   // A partial send keeps sentAt set so nobody gets the post twice.
   await prisma.post.update({ where: { id }, data: { sentCount: result.sent } });
-  revalidatePath("/admin");
+  revalidatePath("/admin/posts");
   if (result.error) {
     return { ok: false, error: `Sent to ${result.sent} of ${result.total} subscribers, then stopped: ${result.error}` };
   }
@@ -125,16 +125,16 @@ export async function unpublishPost(id: string) {
   const post = await prisma.post.update({ where: { id }, data: { publishedAt: null } });
   revalidatePath("/minutes");
   revalidatePath(`/minutes/${post.slug}`);
-  revalidatePath("/admin");
+  revalidatePath("/admin/posts");
 }
 
 export async function deletePost(id: string) {
   await requireAdmin();
   const post = await prisma.post.findUnique({ where: { id } });
-  if (!post) redirect("/admin");
+  if (!post) redirect("/admin/posts");
   if (post.sentAt) throw new Error("A post that was emailed can’t be deleted — unpublish it instead.");
   await prisma.post.delete({ where: { id } });
   revalidatePath("/minutes");
-  revalidatePath("/admin");
-  redirect("/admin");
+  revalidatePath("/admin/posts");
+  redirect("/admin/posts");
 }

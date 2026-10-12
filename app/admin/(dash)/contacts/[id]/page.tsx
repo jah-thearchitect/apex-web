@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDate } from "@/lib/posts";
+import { createClientFromContact } from "@/app/admin/billing-actions";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const contact = await prisma.contact.findUnique({
     where: { id },
-    include: { inquiries: { orderBy: { createdAt: "desc" } } },
+    include: { inquiries: { orderBy: { createdAt: "desc" } }, client: { select: { id: true } } },
   });
   if (!contact) notFound();
   const sub = await prisma.subscriber.findUnique({ where: { email: contact.email } });
@@ -27,6 +28,13 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
             {sub && <> &middot; Minutes: {sub.status === "ACTIVE" ? "subscribed" : "unsubscribed"}</>}
           </p>
         </div>
+        {contact.client ? (
+          <Link className="btn-ghost" href={`/admin/clients/${contact.client.id}`}>View client</Link>
+        ) : (
+          <form action={createClientFromContact.bind(null, contact.id)}>
+            <button type="submit" className="btn-solid">Make client</button>
+          </form>
+        )}
       </div>
 
       <h2 className="admin-h2">Inquiries</h2>

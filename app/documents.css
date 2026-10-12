@@ -1,0 +1,90 @@
+/* Quote and invoice pages (/q/..., /i/...): light paper documents that
+   print cleanly to PDF. Overrides the site's dark body only inside
+   .doc-page. */
+
+.doc-page{
+  margin-inline: calc(var(--gutter) * -1);
+  min-height: 100vh;
+  background: #E9E9E4;
+  color: var(--on-paper);
+  padding: clamp(20px, 4vw, 48px) 16px 64px;
+}
+.doc-toolbar{ max-width: 860px; margin: 0 auto 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.doc-toolbar .doc-hint{ font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--on-paper-soft); text-transform: uppercase; }
+.doc-btn{
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.05em; padding: 0.85em 1.3em;
+  border: 1px solid rgba(16,17,19,.25); background: #fff; color: var(--on-paper); cursor: pointer; text-decoration: none;
+}
+.doc-btn:hover{ border-color: #101113; }
+.doc-btn-solid{ background: #0A0B0D; color: #EDEEEC; border-color: #0A0B0D; }
+.doc-btn-solid:hover{ background: #23272D; }
+.doc-btn:disabled{ opacity: .6; cursor: progress; }
+
+.doc{
+  max-width: 860px; margin: 0 auto; background: #fff; color: #101113;
+  padding: clamp(28px, 5vw, 56px); box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px rgba(0,0,0,.06);
+  font-size: 0.95rem; line-height: 1.55;
+}
+.doc p{ margin: 0; }
+.doc-head{ display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 24px; border-bottom: 2px solid #101113; }
+.doc-brand{ display: flex; align-items: center; gap: 12px; }
+.doc-brand-box{ border: 1px solid rgba(180,134,60,.6); padding: 6px 13px; font-family: var(--font-serif); font-size: 1.15rem; color: #101113; }
+.doc-title{ text-align: right; }
+.doc-kind{ font-family: var(--font-serif); font-size: 2rem; line-height: 1; }
+.doc-number{ font-family: var(--font-mono); font-size: 0.85rem; color: #53565A; margin-top: 6px !important; }
+.doc-status{ display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; border: 1px solid; }
+.doc-status-paid{ color: #1F6B3A; border-color: #1F6B3A; }
+.doc-status-due{ color: #8A6220; border-color: #8A6220; }
+.doc-status-neutral{ color: #53565A; border-color: #8A8D8F; }
+.doc-status-void{ color: #9B2C2C; border-color: #9B2C2C; }
+
+.doc-parties{ display: grid; grid-template-columns: 1fr 1fr auto; gap: 24px; padding: 24px 0; border-bottom: 1px solid #E3E3DE; }
+@media (max-width: 680px){ .doc-parties{ grid-template-columns: 1fr; } }
+.doc-label{ font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8A6220; margin-bottom: 6px !important; }
+.doc-strong{ font-weight: 600; }
+.doc-parties p{ color: #2b2d31; }
+.doc-meta{ margin: 0; display: grid; gap: 8px; }
+.doc-meta div{ display: flex; justify-content: space-between; gap: 18px; }
+.doc-meta dt{ font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #8A8D8F; }
+.doc-meta dd{ margin: 0; font-weight: 600; white-space: nowrap; }
+
+.doc-heading{ font-family: var(--font-serif); font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 500; margin: 28px 0 0; color: #101113; }
+.doc-intro{ margin-top: 12px !important; color: #2b2d31; white-space: pre-wrap; }
+
+.doc-items{ width: 100%; border-collapse: collapse; margin-top: 24px; }
+.doc-items th{ text-align: left; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: #8A8D8F; font-weight: 500; padding: 10px 8px; border-bottom: 1px solid #101113; }
+.doc-items td{ padding: 14px 8px; border-bottom: 1px solid #E3E3DE; vertical-align: top; }
+.doc-items .num{ text-align: right; white-space: nowrap; }
+.doc-item-name{ display: block; font-weight: 600; }
+.doc-item-details{ display: block; color: #53565A; font-size: 0.88rem; margin-top: 4px; white-space: pre-wrap; }
+@media (max-width: 560px){ .doc-items th:nth-child(2), .doc-items td:nth-child(2), .doc-items th:nth-child(3), .doc-items td:nth-child(3){ display: none; } }
+
+.doc-totals{ margin: 18px 0 0 auto; max-width: 340px; }
+.doc-total-row{ display: flex; justify-content: space-between; padding: 8px 8px; color: #2b2d31; }
+.doc-total-main{ font-weight: 700; font-size: 1.1rem; color: #101113; border-top: 2px solid #101113; }
+
+.doc-block{ margin-top: 32px; padding-top: 20px; border-top: 1px solid #E3E3DE; }
+.doc-block h2{ font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; margin: 0 0 10px; }
+.doc-block p, .doc-terms{ color: #2b2d31; white-space: pre-wrap; }
+.doc-footer-note{ margin-top: 32px !important; color: #53565A; white-space: pre-wrap; }
+.doc-generated{ margin-top: 28px !important; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.06em; color: #8A8D8F; }
+
+/* Accept / pay panels */
+.doc-action{ margin-top: 32px; padding: 22px; background: #F6F5F1; border: 1px solid #E3E3DE; }
+.doc-action h2{ font-family: var(--font-serif); font-size: 1.25rem; font-weight: 500; margin: 0 0 8px; }
+.doc-action p{ color: #2b2d31; }
+.doc-action form{ display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.doc-action input[type="text"]{ font: inherit; padding: 0.8em 1em; border: 1px solid rgba(16,17,19,.25); background: #fff; color: #101113; max-width: 360px; }
+.doc-action label.check{ display: flex; gap: 10px; align-items: flex-start; font-size: 0.9rem; color: #2b2d31; }
+.doc-action .row{ display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.doc-alert{ margin-top: 12px !important; font-family: var(--font-mono); font-size: 0.8rem; color: #9B2C2C; }
+.doc-ok{ color: #1F6B3A; }
+.doc-link-btn{ background: none; border: none; padding: 0; color: #53565A; text-decoration: underline; cursor: pointer; font: inherit; font-size: 0.85rem; }
+
+@media print{
+  @page{ margin: 14mm; }
+  body{ background: #fff !important; padding: 0 !important; }
+  header.site, .overlay, footer, .doc-toolbar, .doc-action, nextjs-portal{ display: none !important; }
+  .doc-page{ background: #fff; padding: 0; margin: 0; min-height: 0; }
+  .doc{ box-shadow: none; padding: 0; max-width: none; }
+}

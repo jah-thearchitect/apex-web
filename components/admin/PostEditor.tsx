@@ -127,7 +127,7 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
     <div className="post-editor">
       <div className="admin-head">
         <div>
-          <Link href="/admin" className="admin-back">&larr; All posts</Link>
+          <Link href="/admin/posts" className="admin-back">&larr; All posts</Link>
           <h1>{post ? "Edit post" : "New post"}</h1>
           <p className="admin-sub">
             <span className={`pill ${published ? "pill-live" : ""}`}>{published ? "Published" : "Draft"}</span>

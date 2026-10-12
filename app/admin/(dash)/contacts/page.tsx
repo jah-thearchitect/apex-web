@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Contacts" };
 
-const SOURCE_LABEL: Record<string, string> = { minutes: "Minutes", inquiry: "Inquiry", booking: "Booked call" };
+const SOURCE_LABEL: Record<string, string> = { minutes: "Minutes", inquiry: "Inquiry", booking: "Booked call", client: "Client" };
 
 export default async function Contacts() {
   const [contacts, subs] = await Promise.all([

@@ -107,6 +107,53 @@
 .cta-band p:not(.eyebrow){ color: var(--on-ink-soft); margin-top: 12px; max-width: 48ch; }
 .cta-actions{ display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
 
+/* ---------- CLIENT PORTAL ---------- */
+.admin-nav-sep{ width: 1px; height: 14px; background: var(--line-ink); }
+.admin-notice{ border: 1px dashed var(--gold); color: var(--gold-bright); font-size: 0.9rem; padding: 14px 18px; margin-bottom: 24px; }
+.stat-row{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--line-ink); border: 1px solid var(--line-ink); margin-bottom: 36px; }
+.stat{ background: var(--ink); padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+.stat span{ font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--on-ink-faint); }
+.stat strong{ font-family: var(--font-serif); font-weight: 500; font-size: 1.8rem; color: var(--on-ink); }
+.stat strong.warn{ color: #E59A9A; }
+.stat small{ color: var(--on-ink-soft); font-size: 0.82rem; }
+.overview-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+@media (max-width: 900px){ .overview-grid{ grid-template-columns: 1fr; } }
+.admin-table small{ color: var(--on-ink-faint); font-size: 0.8rem; }
+.pill-warn{ border-color: #c96b6b; color: #E59A9A; }
+.tab-row{ display: flex; gap: 16px; flex-wrap: wrap; }
+.tab-row a{ color: var(--on-ink-soft); text-decoration: none; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; padding-bottom: 4px; border-bottom: 1px solid transparent; }
+.tab-row a.on, .tab-row a:hover{ color: var(--accent-bright); border-color: var(--accent); }
+.field-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.field-grid.tight{ grid-template-columns: 1fr 1fr; gap: 12px; }
+.field select{ background: var(--ink-2); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 1rem; padding: 0.8em 1em; width: 100%; }
+.doc-fieldset{ border: 0; padding: 0; margin: 0; min-width: 0; }
+.doc-fieldset:disabled{ opacity: .7; }
+.line-items{ border: 1px solid var(--line-ink); background: var(--ink-2); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.line-head, .line-row{ display: grid; grid-template-columns: 1fr 70px 120px 120px 32px; gap: 10px; align-items: start; }
+.line-head span{ font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--on-ink-faint); }
+.line-row input, .line-row textarea{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 0.95rem; padding: 0.6em 0.8em; width: 100%; min-width: 0; }
+.line-row textarea{ margin-top: 6px; font-size: 0.85rem; color: var(--on-ink-soft); resize: vertical; }
+.line-qty, .line-price{ text-align: right; }
+.line-amount{ text-align: right; padding-top: 0.6em; font-variant-numeric: tabular-nums; }
+.line-remove{ background: none; border: 1px solid transparent; color: var(--on-ink-faint); font-size: 1.3rem; line-height: 1; padding: 6px; cursor: pointer; }
+.line-remove:hover{ color: #E59A9A; }
+.line-tools{ display: flex; gap: 12px; flex-wrap: wrap; align-items: center; padding-top: 6px; }
+.line-tools select{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink-soft); font-family: var(--font-mono); font-size: 0.78rem; padding: 0.9em 1em; }
+.line-total{ display: flex; justify-content: flex-end; gap: 24px; padding: 10px 42px 2px 0; border-top: 1px solid var(--line-ink); font-variant-numeric: tabular-nums; }
+.line-total strong{ font-size: 1.2rem; }
+.line-total.sub{ border-top: 0; color: var(--on-ink-soft); padding-top: 0; }
+@media (max-width: 700px){
+  .line-head{ display: none; }
+  .line-row{ grid-template-columns: 1fr 1fr 32px; }
+  .line-desc{ grid-column: 1 / -1; }
+  .line-amount{ display: none; }
+}
+.catalog-form{ align-items: end; }
+.check-list{ list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; color: var(--on-ink-soft); }
+.check-list li::before{ content: "○ "; color: var(--gold-bright); }
+.check-list li.ok::before{ content: "● "; color: var(--accent-bright); }
+.check-list code{ font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-bright); }
+
 /* ---------- NEWSLETTER: NAME FIELDS ---------- */
 .nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
 .nl-form .nl-names input{

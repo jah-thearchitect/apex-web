@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./minutes-admin.css";
+import "./documents.css";
 
 const newsreader = Newsreader({
   subsets: ["latin"],

@@ -74,6 +74,7 @@ model Contact {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   inquiries      Inquiry[]
+  client         Client?
 }
 
 // A Consultation-page inquiry, kept even if the notification email fails.
@@ -87,4 +88,180 @@ model Inquiry {
   createdAt DateTime @default(now())
 
   @@index([contactId])
+}
+
+// ---------- Client portal ----------
+
+enum ClientStatus {
+  LEAD
+  ACTIVE
+  PAST
+}
+
+// A business the firm quotes, bills, and reports to. Linked to the
+// Contact for the same email so the whole history stays in one place.
+model Client {
+  id               String       @id @default(cuid())
+  businessName     String
+  contactName      String
+  email            String
+  phone            String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  state            String?
+  postalCode       String?
+  notes            String?
+  status           ClientStatus @default(LEAD)
+  stripeCustomerId String?
+  contactId        String?      @unique
+  contact          Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  quotes           Quote[]
+  invoices         Invoice[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([email])
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  DECLINED
+}
+
+// A proposal. `token` is the secret in the client's link (/q/<token>).
+// Accepting it records who accepted and, if depositPercent > 0, creates
+// and sends the deposit invoice.
+model Quote {
+  id             String      @id @default(cuid())
+  number         String      @unique
+  token          String      @unique @default(cuid())
+  clientId       String
+  client         Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title          String
+  intro          String      @default("")
+  terms          String      @default("")
+  validUntil     DateTime?
+  depositPercent Int         @default(50)
+  status         QuoteStatus @default(DRAFT)
+  items          QuoteItem[]
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  acceptedAt     DateTime?
+  acceptedName   String?
+  declinedAt     DateTime?
+  invoices       Invoice[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([clientId])
+}
+
+model QuoteItem {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  position    Int
+  description String
+  details     String @default("")
+  quantity    Int    @default(1)
+  unitCents   Int
+
+  @@index([quoteId])
+}
+
+enum InvoiceKind {
+  STANDARD
+  DEPOSIT
+  RETAINER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PAID
+  VOID
+}
+
+// "Overdue" isn't stored: it's SENT/VIEWED with dueDate in the past.
+// `token` is the secret in the client's link (/i/<token>).
+model Invoice {
+  id                    String        @id @default(cuid())
+  number                String        @unique
+  token                 String        @unique @default(cuid())
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quoteId               String?
+  quote                 Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  kind                  InvoiceKind   @default(STANDARD)
+  title                 String
+  notes                 String        @default("")
+  issueDate             DateTime      @default(now())
+  dueDate               DateTime
+  status                InvoiceStatus @default(DRAFT)
+  items                 InvoiceItem[]
+  sentAt                DateTime?
+  viewedAt              DateTime?
+  paidAt                DateTime?
+  amountPaidCents       Int           @default(0)
+  paymentMethod         String?
+  stripeCheckoutId      String?
+  stripePaymentIntentId String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position    Int
+  description String
+  details     String  @default("")
+  quantity    Int     @default(1)
+  unitCents   Int
+
+  @@index([invoiceId])
+}
+
+// Saved line items (e.g. "Monthly Partnership") for quick reuse.
+model CatalogItem {
+  id          String   @id @default(cuid())
+  name        String
+  details     String   @default("")
+  unitCents   Int
+  createdAt   DateTime @default(now())
+}
+
+// Sequential document numbers ("quote", "invoice"), incremented atomically.
+model Counter {
+  name  String @id
+  value Int    @default(0)
+}
+
+// The firm's details printed on quotes and invoices. Always the one row
+// with id "singleton"; edited in Admin -> Settings.
+model BusinessSettings {
+  id               String  @id @default("singleton")
+  legalName        String  @default("Apex Capital Consultants")
+  addressLine1     String  @default("")
+  addressLine2     String  @default("")
+  city             String  @default("")
+  state            String  @default("")
+  postalCode       String  @default("")
+  billingEmail     String  @default("")
+  phone            String  @default("")
+  paymentTermsDays Int     @default(15)
+  depositPercent   Int     @default(50)
+  quoteValidDays   Int     @default(30)
+  invoiceFooter    String  @default("Thank you for building with Apex.")
+  quoteTerms       String  @default("")
+  updatedAt        DateTime @updatedAt
 }
