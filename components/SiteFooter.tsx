@@ -18,6 +18,7 @@ export function SiteFooter() {
           <ul>
             <li><Link href="/what-we-do">The Six Disciplines</Link></li>
             <li><Link href="/what-we-do#how-we-work">How We Work</Link></li>
+            <li><Link href="/services">Services</Link></li>
             <li><Link href="/minutes">The Mastermind Minutes</Link></li>
           </ul>
         </div>
@@ -25,7 +26,7 @@ export function SiteFooter() {
           <h4>Firm</h4>
           <ul>
             <li><Link href="/firm">The Firm</Link></li>
-            <li><Link href="/clients">Clients</Link></li>
+            <li><Link href="/clients">Clients &amp; Builds</Link></li>
             <li><Link href="/consultation">Consultation</Link></li>
             <li><Link href="/consultation#inquiry">Contact</Link></li>
           </ul>

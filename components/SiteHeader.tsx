@@ -9,7 +9,8 @@ import { LogoMark } from "@/components/LogoMark";
 const NAV = [
   { href: "/firm", label: "The Firm", img: "/images/menu-firm.webp" },
   { href: "/what-we-do", label: "What We Do", img: "/images/line-platforms.webp" },
-  { href: "/clients", label: "Clients", img: "/images/menu-clients.webp" },
+  { href: "/services", label: "Services", img: "/images/menu-services.webp" },
+  { href: "/clients", label: "Clients & Builds", img: "/images/menu-clients.webp" },
   { href: "/minutes", label: "The Minutes", img: "/images/menu-minutes.webp" },
   { href: "/consultation", label: "Consultation", img: "/images/menu-consult.webp" },
 ];

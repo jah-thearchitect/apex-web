@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { PageShell } from "@/components/PageShell";
 import { PhotoHero } from "@/components/SiteImages";
 
@@ -102,6 +103,19 @@ export default function WhatWeDoPage() {
                 <p>{s.body}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="on-ink-2">
+        <div className="wrap cta-band">
+          <div>
+            <p className="eyebrow">NEXT STEP</p>
+            <h2>Ready to Build? See Our Services.</h2>
+            <p>Every discipline above, broken down into the specific services you can start with today.</p>
+          </div>
+          <div className="cta-actions">
+            <Link className="btn-solid" href="/services">See Our Services</Link>
           </div>
         </div>
       </section>

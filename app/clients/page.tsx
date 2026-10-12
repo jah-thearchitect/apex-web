@@ -3,7 +3,7 @@ import { PageShell } from "@/components/PageShell";
 import { FeatureImage, PhotoHero } from "@/components/SiteImages";
 
 export const metadata: Metadata = {
-  title: "Clients",
+  title: "Clients & Builds",
   description: "Apex works with business owners serious about expanding — whatever the business, whatever stage it's in. The readiness to grow is the qualifier.",
 };
 
@@ -35,7 +35,7 @@ export default function ClientsPage() {
   return (
     <PageShell>
       <PhotoHero src="/images/photo-lobby.webp" position="center 40%">
-          <p className="eyebrow">CLIENTS</p>
+          <p className="eyebrow">CLIENTS &amp; BUILDS</p>
           <h1>Real Businesses, Real Builds</h1>
           <p>
             Apex works with business owners serious about expanding &mdash; whatever the business, whatever stage it&rsquo;s in. The sector isn&rsquo;t the qualifier. The readiness to grow is.

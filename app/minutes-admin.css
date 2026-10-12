@@ -93,6 +93,20 @@
   background: linear-gradient(180deg, var(--ink) 0%, rgba(10,11,13,0) 18%, rgba(10,11,13,0) 82%, var(--ink) 100%); }
 .bg-art-copy{ position: relative; z-index: 1; }
 
+/* ---------- SERVICES ---------- */
+.discipline.service-row{ grid-template-columns: 90px 1fr 1fr; }
+.service-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.service-list li{ display: flex; gap: 12px; align-items: baseline; color: var(--on-ink); font-size: 0.98rem; }
+.service-list li::before{ content: ""; width: 14px; height: 1px; background: var(--gold); flex: none; transform: translateY(-4px); }
+@media (max-width: 900px){ .discipline.service-row{ grid-template-columns: 90px 1fr; } .service-list{ grid-column: 2; margin-top: 8px; } }
+@media (max-width: 640px){ .discipline.service-row{ grid-template-columns: 1fr; } .service-list{ grid-column: auto; } }
+
+/* Closing call-to-action band (Services, What We Do). */
+.cta-band{ display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap; }
+.cta-band h2{ font-size: clamp(1.8rem, 4vw, 2.6rem); margin-top: 12px; }
+.cta-band p:not(.eyebrow){ color: var(--on-ink-soft); margin-top: 12px; max-width: 48ch; }
+.cta-actions{ display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+
 /* ---------- NEWSLETTER: NAME FIELDS ---------- */
 .nl-names{ display: flex; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
 .nl-form .nl-names input{
