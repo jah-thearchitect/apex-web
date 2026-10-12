@@ -8,5 +8,5 @@ export const DESCRIPTION =
 // (calendar.app.google/...); BOOKING_EMBED_URL is the calendar.google.com
 // .../appointments/schedules/... URL it redirects to, with ?gv=true, used
 // for the inline iframe. Leave both empty to show the "opens soon" panel.
-export const BOOKING_URL = "";
-export const BOOKING_EMBED_URL = "";
+export const BOOKING_URL = "https://calendar.app.google/W6fhsEhSKhtEbZYj9";
+export const BOOKING_EMBED_URL = "https://calendar.google.com/calendar/appointments/AcZssZ0jpNvdn_Y5IrFqcL-ObJKLNtuIg-7kP3tp12k=?gv=true";

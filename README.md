@@ -62,7 +62,7 @@ Inquiries are saved to Contacts first, then emailed. The visitor sees an error o
 
 ## Open items
 
-1. **Booking link.** Set `BOOKING_URL` and `BOOKING_EMBED_URL` in `lib/site.ts`. Until they're set, the Consultation page shows its "opens soon" panel.
+1. **Booking sync.** The Consultation page embeds the Google Calendar appointment schedule (`BOOKING_URL` / `BOOKING_EMBED_URL` in `lib/site.ts`; the embed uses the address the short link resolves to, not the `/appointments/schedules/` form). Pulling bookers into Contacts automatically still needs the Google Cloud service-account setup.
 2. **Real inquiry fields.** The owner is sending his paper form. Replace the placeholder fields in `components/InquiryForm.tsx` and `app/api/inquiry/route.ts`.
 3. **Client logos.** Swap the text wordmarks in `app/clients/page.tsx` once the files arrive, and keep the same links.
 4. **Full privacy policy.** The current page accurately describes inquiries, the Minutes list and analytics. Expand it into a full policy once the inquiry fields are final.
