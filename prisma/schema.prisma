@@ -221,6 +221,9 @@ model Invoice {
   paymentMethod         String?
   stripeCheckoutId      String?
   stripePaymentIntentId String?
+  // "Did it arrive?" reminders to the firm for Gusto/offline invoices.
+  paymentNudgeAt        DateTime?
+  paymentNudgeCount     Int           @default(0)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
