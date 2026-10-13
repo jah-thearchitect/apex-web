@@ -156,9 +156,9 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
       <fieldset disabled={locked} className="editor-fields doc-fieldset">
         <div className="field-grid">
           <label className="field">
-            <span>Client</span>
+            <span>Client <small><Link href="/admin/clients/new">+ New client</Link></small></span>
             <select value={clientId} onChange={(e) => touch(setClientId)(e.target.value)} required>
-              <option value="">Choose a client…</option>
+              <option value="">{clients.length ? "Choose a client…" : "No clients yet — add one first"}</option>
               {clients.map((c) => <option key={c.id} value={c.id}>{c.businessName} — {c.email}</option>)}
             </select>
           </label>
