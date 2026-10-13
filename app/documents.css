@@ -63,6 +63,7 @@
 .doc-total-row{ display: flex; justify-content: space-between; padding: 8px 8px; color: #2b2d31; }
 .doc-total-main{ font-weight: 700; font-size: 1.1rem; color: #101113; border-top: 2px solid #101113; }
 
+.doc-start-note{ margin-top: 24px !important; padding: 12px 16px; border-left: 0; border-top: 2px solid #B4863C; background: #F6F5F1; font-weight: 600; color: #101113; }
 .doc-block{ margin-top: 32px; padding-top: 20px; border-top: 1px solid #E3E3DE; }
 .doc-block h2{ font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; margin: 0 0 10px; }
 .doc-block p, .doc-terms{ color: #2b2d31; white-space: pre-wrap; }

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { DocumentView } from "@/components/docs/DocumentView";
 import { PayButton, PrintButton } from "@/components/docs/DocButtons";
 import { getSettings, invoiceDisplayStatus } from "@/lib/billing";
-import { formatMoney, subtotal } from "@/lib/money";
+import { formatMoney, subtotal, workStartNote } from "@/lib/money";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import { getAdminId } from "@/lib/session";
@@ -70,6 +70,9 @@ export default async function InvoicePage({
         }
         footerNote={inv.notes || settings.invoiceFooter}
       >
+        {workStartNote(inv.kind) && inv.status !== "PAID" && inv.status !== "VOID" && (
+          <p className="doc-start-note">{workStartNote(inv.kind)}</p>
+        )}
         {sp.paid && inv.status !== "PAID" && (
           <div className="doc-action">
             <h2>Payment received — confirming.</h2>

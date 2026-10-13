@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
 import type { BusinessSettings } from "@/generated/prisma/client";
-import { formatMoney, subtotal } from "./money";
+import { formatMoney, subtotal, workStartNote } from "./money";
 import { formatDate } from "./posts";
 import { prisma } from "./prisma";
 import { SITE_URL } from "./site";
@@ -104,11 +104,13 @@ export async function emailInvoice(inv: {
     esc(`${what}: ${inv.title}`),
     P(`Hi ${esc(first)},`) +
       P(`${what} ${inv.number} from ${esc(s.legalName)} is ready. The amount due is <strong>${total}</strong>, due ${formatDate(inv.dueDate)}.`) +
+      (workStartNote(inv.kind) ? P(`<strong>${workStartNote(inv.kind)}</strong>`) : "") +
       P("You can view it, download a PDF, and pay online."),
     { label: "View & pay invoice", url: invoiceUrl(inv.token) },
     `${esc(s.legalName)} &middot; Invoice ${inv.number}`
   );
-  const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.\n\nView and pay: ${invoiceUrl(inv.token)}`;
+  const start = workStartNote(inv.kind);
+  const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.${start ? `\n\n${start}` : ""}\n\nView and pay: ${invoiceUrl(inv.token)}`;
   await send(inv.client.email, `Invoice ${inv.number} from ${s.legalName}`, html, text);
 }
 
