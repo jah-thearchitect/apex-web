@@ -20,7 +20,13 @@ export async function POST(_req: Request, { params }: { params: Promise<{ token:
   if (amount <= 0) return NextResponse.json({ error: "Nothing is due on this invoice." }, { status: 409 });
 
   // One Stripe customer per client, so payments group together in Stripe.
+  // A saved ID can be stale: test-mode customers don't exist once live keys
+  // are in, and customers can be deleted in the dashboard. Recreate if so.
   let customerId = inv.client.stripeCustomerId;
+  if (customerId) {
+    const existing = await stripe.customers.retrieve(customerId).catch(() => null);
+    if (!existing || existing.deleted) customerId = null;
+  }
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: inv.client.email,
