@@ -1,5 +1,5 @@
 import "server-only";
-import { notifyFirm } from "./billing";
+import { emailPaymentReceipt, notifyFirm } from "./billing";
 import { formatMoney } from "./money";
 import { prisma } from "./prisma";
 
@@ -28,6 +28,7 @@ export async function markInvoicePaid(
   const inv = await prisma.invoice.findUnique({ where: { id: invoiceId }, include: { client: true } });
   if (inv) {
     await prisma.client.update({ where: { id: inv.clientId }, data: { status: "ACTIVE" } });
+    await emailPaymentReceipt(inv, payment.amountCents, payment.method);
     await notifyFirm(`Paid: ${inv.number} — ${inv.client.businessName}`, [
       `${inv.client.businessName} paid invoice ${inv.number} (${inv.title}).`,
       `Amount: ${formatMoney(payment.amountCents)} via ${payment.method}.`,

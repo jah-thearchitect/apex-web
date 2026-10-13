@@ -124,3 +124,27 @@ export async function notifyFirm(subject: string, lines: string[]) {
     console.error("Firm notification failed:", err);
   }
 }
+
+/** Branded "payment received" note to the client. Never throws. */
+export async function emailPaymentReceipt(inv: {
+  number: string; token: string; title: string;
+  client: { contactName: string; email: string };
+}, amountCents: number, method: string) {
+  try {
+    const s = await getSettings();
+    const first = inv.client.contactName.split(/\s+/)[0] || "there";
+    const amount = formatMoney(amountCents);
+    const html = emailShell(
+      esc(`Payment received: ${inv.number}`),
+      P(`Hi ${esc(first)},`) +
+        P(`Thank you. We received your payment of <strong>${amount}</strong> for invoice ${inv.number} (${esc(inv.title)}).`) +
+        P("The invoice now shows as paid, and you can download a PDF copy for your records."),
+      { label: "View paid invoice", url: invoiceUrl(inv.token) },
+      `${esc(s.legalName)} &middot; Invoice ${inv.number} &middot; Paid via ${esc(method)}`
+    );
+    const text = `Hi ${first},\n\nThank you. We received your payment of ${amount} for invoice ${inv.number} (${inv.title}).\n\nView the paid invoice: ${invoiceUrl(inv.token)}`;
+    await send(inv.client.email, `Payment received: Invoice ${inv.number}`, html, text);
+  } catch (err) {
+    console.error("Payment receipt email failed:", err);
+  }
+}
