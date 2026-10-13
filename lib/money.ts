@@ -22,6 +22,19 @@ export function parseDollars(input: string): number | null {
   return Math.round(n * 100);
 }
 
+export const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  STRIPE: "Online (card or bank via Stripe)",
+  GUSTO: "Gusto direct deposit",
+  OFFLINE: "Check or bank transfer",
+};
+
+/** How-to-pay line on invoices for clients who don't pay online. */
+export function paymentMethodNote(method: string): string | null {
+  if (method === "GUSTO") return "Payment via Gusto direct deposit. No card payment is needed.";
+  if (method === "OFFLINE") return "Payment by check or bank transfer. The firm will share payment details.";
+  return null;
+}
+
 /** Start-of-work line shown on invoices (none for retainers: work is ongoing). */
 export function workStartNote(kind: string): string | null {
   if (kind === "DEPOSIT") return "Project work begins upon receipt of the deposit.";

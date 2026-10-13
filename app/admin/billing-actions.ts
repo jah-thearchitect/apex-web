@@ -46,6 +46,7 @@ export type ClientInput = {
   postalCode?: string;
   notes?: string;
   status?: "LEAD" | "ACTIVE" | "PAST";
+  paymentMethod?: "STRIPE" | "GUSTO" | "OFFLINE";
 };
 
 export async function saveClient(input: ClientInput): Promise<Result> {
@@ -73,6 +74,7 @@ export async function saveClient(input: ClientInput): Promise<Result> {
     postalCode: opt(input.postalCode, 20),
     notes: opt(input.notes, 5000),
     status: input.status ?? "LEAD",
+    paymentMethod: input.paymentMethod ?? "STRIPE",
     contactId: taken ? undefined : contactId,
   };
   const client = input.id

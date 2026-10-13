@@ -99,7 +99,7 @@ export default async function ClientDetail({ params }: { params: Promise<{ id: s
         client={{
           id: c.id, businessName: c.businessName, contactName: c.contactName, email: c.email,
           phone: c.phone ?? "", addressLine1: c.addressLine1 ?? "", addressLine2: c.addressLine2 ?? "",
-          city: c.city ?? "", state: c.state ?? "", postalCode: c.postalCode ?? "", notes: c.notes ?? "", status: c.status,
+          city: c.city ?? "", state: c.state ?? "", postalCode: c.postalCode ?? "", notes: c.notes ?? "", status: c.status, paymentMethod: c.paymentMethod,
         }}
       />
     </>

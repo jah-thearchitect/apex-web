@@ -10,7 +10,7 @@ import { depositCents, formatMoney, lineTotal, parseDollars, subtotal } from "@/
 
 type Row = { key: number; description: string; details: string; quantity: string; price: string };
 type Catalog = { id: string; name: string; details: string; unitCents: number };
-type ClientOpt = { id: string; businessName: string; email: string };
+type ClientOpt = { id: string; businessName: string; email: string; paymentMethod?: string };
 
 export type DocEditorProps = {
   type: "quote" | "invoice";
@@ -117,7 +117,8 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
     });
   };
   const onPaid = () => {
-    const method = window.prompt("How was it paid? (check, cash, bank transfer, Zelle…)", "check");
+    const preferred = clients.find((c) => c.id === clientId)?.paymentMethod;
+    const method = window.prompt("How was it paid? (Gusto, check, cash, bank transfer, Zelle…)", preferred === "GUSTO" ? "Gusto" : "check");
     if (method === null || !doc) return;
     run(async () => { const r = await recordManualPayment(doc.id, method); setStatus(r.ok ? "Marked paid." : r.error); router.refresh(); });
   };

@@ -15,6 +15,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ token:
   if (!inv) return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
   if (inv.status === "PAID") return NextResponse.json({ error: "This invoice is already paid." }, { status: 409 });
   if (inv.status === "VOID" || inv.status === "DRAFT") return NextResponse.json({ error: "This invoice can't be paid." }, { status: 409 });
+  if (inv.client.paymentMethod !== "STRIPE") return NextResponse.json({ error: "This invoice is paid outside the website. Please see the payment note on the invoice." }, { status: 409 });
 
   const amount = subtotal(inv.items);
   if (amount <= 0) return NextResponse.json({ error: "Nothing is due on this invoice." }, { status: 409 });

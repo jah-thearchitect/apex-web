@@ -92,6 +92,15 @@ model Inquiry {
 
 // ---------- Client portal ----------
 
+// How a client pays invoices. Only STRIPE shows the online Pay button;
+// GUSTO (paid as a contractor through the client's Gusto payroll) and
+// OFFLINE (check / bank transfer) are recorded by hand when money arrives.
+enum PaymentMethod {
+  STRIPE
+  GUSTO
+  OFFLINE
+}
+
 enum ClientStatus {
   LEAD
   ACTIVE
@@ -112,7 +121,8 @@ model Client {
   state            String?
   postalCode       String?
   notes            String?
-  status           ClientStatus @default(LEAD)
+  status           ClientStatus  @default(LEAD)
+  paymentMethod    PaymentMethod @default(STRIPE)
   stripeCustomerId String?
   contactId        String?      @unique
   contact          Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)

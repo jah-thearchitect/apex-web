@@ -58,6 +58,14 @@ export function ClientForm({ client }: { client?: ClientInput & { id: string } }
         </select>
       </label>
       <label className="field">
+        <span>Payment method <small>how this client pays invoices</small></span>
+        <select value={form.paymentMethod ?? "STRIPE"} onChange={set("paymentMethod")}>
+          <option value="STRIPE">Online — card or bank via Stripe (shows Pay button)</option>
+          <option value="GUSTO">Gusto direct deposit (no Pay button)</option>
+          <option value="OFFLINE">Check or bank transfer (no Pay button)</option>
+        </select>
+      </label>
+      <label className="field">
         <span>Notes <small>private, never shown to the client</small></span>
         <textarea rows={3} value={form.notes ?? ""} onChange={set("notes")} maxLength={5000} />
       </label>

@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
 import type { BusinessSettings } from "@/generated/prisma/client";
-import { formatMoney, subtotal, workStartNote } from "./money";
+import { formatMoney, paymentMethodNote, subtotal, workStartNote } from "./money";
 import { formatDate } from "./posts";
 import { prisma } from "./prisma";
 import { SITE_URL } from "./site";
@@ -94,23 +94,24 @@ export async function emailQuote(q: {
 
 export async function emailInvoice(inv: {
   number: string; token: string; title: string; dueDate: Date; kind: string;
-  client: { contactName: string; email: string }; items: ItemRow[];
+  client: { contactName: string; email: string; paymentMethod?: string }; items: ItemRow[];
 }) {
   const s = await getSettings();
   const first = inv.client.contactName.split(/\s+/)[0] || "there";
   const total = formatMoney(subtotal(inv.items));
   const what = inv.kind === "DEPOSIT" ? "Your deposit invoice" : "Your invoice";
+  const method = paymentMethodNote(inv.client.paymentMethod ?? "STRIPE");
   const html = emailShell(
     esc(`${what}: ${inv.title}`),
     P(`Hi ${esc(first)},`) +
       P(`${what} ${inv.number} from ${esc(s.legalName)} is ready. The amount due is <strong>${total}</strong>, due ${formatDate(inv.dueDate)}.`) +
       (workStartNote(inv.kind) ? P(`<strong>${workStartNote(inv.kind)}</strong>`) : "") +
-      P("You can view it, download a PDF, and pay online."),
-    { label: "View & pay invoice", url: invoiceUrl(inv.token) },
+      (method ? P(method) + P("You can view it and download a PDF.") : P("You can view it, download a PDF, and pay online.")),
+    { label: method ? "View invoice" : "View & pay invoice", url: invoiceUrl(inv.token) },
     `${esc(s.legalName)} &middot; Invoice ${inv.number}`
   );
   const start = workStartNote(inv.kind);
-  const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.${start ? `\n\n${start}` : ""}\n\nView and pay: ${invoiceUrl(inv.token)}`;
+  const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.${start ? `\n\n${start}` : ""}${method ? `\n\n${method}` : ""}\n\n${method ? "View" : "View and pay"}: ${invoiceUrl(inv.token)}`;
   await send(inv.client.email, `Invoice ${inv.number} from ${s.legalName}`, html, text);
 }
 

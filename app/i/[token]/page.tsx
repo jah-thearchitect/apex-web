@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { DocumentView } from "@/components/docs/DocumentView";
 import { PayButton, PrintButton } from "@/components/docs/DocButtons";
 import { getSettings, invoiceDisplayStatus } from "@/lib/billing";
-import { formatMoney, subtotal, workStartNote } from "@/lib/money";
+import { formatMoney, paymentMethodNote, subtotal, workStartNote } from "@/lib/money";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 import { getAdminId } from "@/lib/session";
@@ -39,6 +39,9 @@ export default async function InvoicePage({
   const display = invoiceDisplayStatus(inv);
   const tone = display === "Paid" ? "paid" : display === "Void" ? "void" : display === "Draft" ? "neutral" : "due";
   const payable = inv.status !== "PAID" && inv.status !== "VOID" && inv.status !== "DRAFT";
+  // Clients paid through Gusto or offline never see an online Pay button.
+  const online = inv.client.paymentMethod === "STRIPE";
+  const methodNote = paymentMethodNote(inv.client.paymentMethod);
 
   return (
     <div className="doc-page">
@@ -46,7 +49,7 @@ export default async function InvoicePage({
         <span className="doc-hint">{isAdmin && inv.status === "DRAFT" ? "Draft preview" : "Secure invoice"}</span>
         <div className="row" style={{ display: "flex", gap: 10 }}>
           <PrintButton />
-          {payable && stripeConfigured() && <PayButton token={inv.token} label={`Pay ${formatMoney(total)}`} />}
+          {payable && online && stripeConfigured() && <PayButton token={inv.token} label={`Pay ${formatMoney(total)}`} />}
         </div>
       </div>
 
@@ -73,6 +76,7 @@ export default async function InvoicePage({
         {workStartNote(inv.kind) && inv.status !== "PAID" && inv.status !== "VOID" && (
           <p className="doc-start-note">{workStartNote(inv.kind)}</p>
         )}
+        {methodNote && payable && <p className="doc-start-note">{methodNote}</p>}
         {sp.paid && inv.status !== "PAID" && (
           <div className="doc-action">
             <h2>Payment received — confirming.</h2>
@@ -89,10 +93,10 @@ export default async function InvoicePage({
           <div className="doc-action">
             <h2>Proposal accepted.</h2>
             <p>The next step is the deposit below. Once it&rsquo;s paid, the firm will reach out to kick off your build.</p>
-            {!stripeConfigured() && <p className="doc-alert">Online payment is being set up. The firm will follow up with payment details.</p>}
+            {online && !stripeConfigured() && <p className="doc-alert">Online payment is being set up. The firm will follow up with payment details.</p>}
           </div>
         )}
-        {payable && !stripeConfigured() && sp.from !== "quote" && (
+        {payable && online && !stripeConfigured() && sp.from !== "quote" && (
           <p className="doc-alert" style={{ marginTop: 24 }}>Online payment is being set up. Please contact the firm for payment details.</p>
         )}
       </DocumentView>

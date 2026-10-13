@@ -7,7 +7,7 @@ const ymd = (d: Date) => d.toISOString().slice(0, 10);
 /** Client list, saved items, and defaults (from Settings) for the quote/invoice editor. */
 export async function editorContext(clientId = "") {
   const [clients, catalog, s] = await Promise.all([
-    prisma.client.findMany({ orderBy: { businessName: "asc" }, select: { id: true, businessName: true, email: true } }),
+    prisma.client.findMany({ orderBy: { businessName: "asc" }, select: { id: true, businessName: true, email: true, paymentMethod: true } }),
     prisma.catalogItem.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, details: true, unitCents: true } }),
     getSettings(),
   ]);
