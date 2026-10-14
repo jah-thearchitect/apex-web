@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RequestStatusPicker } from "@/components/admin/RequestButtons";
+import { invoiceDisplayStatus } from "@/lib/billing";
 import type { FileRef } from "@/lib/briefQuestions";
+import { formatMoney, subtotal } from "@/lib/money";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
 
@@ -12,7 +14,7 @@ const fileHref = (path: string) => `/api/admin/file/${path.split("/").map(encode
 
 export default async function UpdateRequestView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const r = await prisma.changeRequest.findUnique({ where: { id }, include: { client: true } });
+  const r = await prisma.changeRequest.findUnique({ where: { id }, include: { client: true, invoice: { include: { items: true } } } });
   if (!r) notFound();
   const files = (Array.isArray(r.files) ? r.files : []) as FileRef[];
 
@@ -26,6 +28,15 @@ export default async function UpdateRequestView({ params }: { params: Promise<{ 
             <Link href={`/admin/clients/${r.clientId}`}>{r.client.businessName}</Link> &middot; {r.name} &middot;{" "}
             <a href={`mailto:${r.email}`}>{r.email}</a> &middot; {formatDate(r.createdAt)}
           </p>
+        </div>
+        <div className="editor-actions">
+          {r.invoice ? (
+            <Link className="btn-ghost" href={`/admin/invoices/${r.invoice.id}`}>
+              {r.invoice.number} &middot; {formatMoney(subtotal(r.invoice.items))} &middot; {invoiceDisplayStatus(r.invoice)}
+            </Link>
+          ) : (
+            <Link className="btn-solid" href={`/admin/invoices/new?request=${r.id}`}>Create invoice</Link>
+          )}
         </div>
       </div>
 

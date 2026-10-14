@@ -16,7 +16,14 @@ export type DocEditorProps = {
   type: "quote" | "invoice";
   clients: ClientOpt[];
   catalog: Catalog[];
-  defaults: { clientId: string; depositPercent: number; validUntil: string; dueDate: string; issueDate: string; terms: string; notes: string };
+  defaults: {
+    clientId: string; depositPercent: number; validUntil: string; dueDate: string; issueDate: string; terms: string; notes: string;
+    /** Prefill for a new document (e.g. billing an update request). */
+    title?: string;
+    items?: { description: string; details: string; quantity: number; unitCents: number }[];
+    changeRequestId?: string;
+    note?: string;
+  };
   doc?: {
     id: string;
     number: string;
@@ -50,7 +57,7 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
   const router = useRouter();
   const isQuote = type === "quote";
   const [clientId, setClientId] = useState(doc?.clientId ?? defaults.clientId);
-  const [title, setTitle] = useState(doc?.title ?? "");
+  const [title, setTitle] = useState(doc?.title ?? defaults.title ?? "");
   const [intro, setIntro] = useState(doc?.intro ?? "");
   const [terms, setTerms] = useState(doc?.terms ?? defaults.terms);
   const [notes, setNotes] = useState(doc?.notes ?? defaults.notes);
@@ -59,7 +66,9 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
   const [kind, setKind] = useState(doc?.kind ?? "STANDARD");
   const [issueDate, setIssueDate] = useState(doc?.issueDate ?? defaults.issueDate);
   const [dueDate, setDueDate] = useState(doc?.dueDate ?? defaults.dueDate);
-  const [rows, setRows] = useState<Row[]>(doc?.items.length ? doc.items.map(toRow) : [blankRow()]);
+  const [rows, setRows] = useState<Row[]>(
+    doc?.items.length ? doc.items.map(toRow) : defaults.items?.length ? defaults.items.map((i) => ({ ...toRow(i), price: i.unitCents ? toRow(i).price : "" })) : [blankRow()]
+  );
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState("");
   const [pending, start] = useTransition();
@@ -95,7 +104,7 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
     if (bad) { setStatus(`Check the price on "${bad.description}".`); return null; }
     const res = isQuote
       ? await saveQuote({ id: doc?.id, clientId, title, intro, terms, validUntil: validUntil || null, depositPercent: Number(depositPercent) || 0, items })
-      : await saveInvoice({ id: doc?.id, clientId, title, notes, kind, issueDate, dueDate, items });
+      : await saveInvoice({ id: doc?.id, clientId, title, notes, kind, issueDate, dueDate, items, changeRequestId: doc ? undefined : defaults.changeRequestId });
     if (!res.ok) { setStatus(res.error); return null; }
     setDirty(false);
     if (!doc) router.replace(`/admin/${isQuote ? "quotes" : "invoices"}/${res.id}`);
@@ -143,6 +152,7 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
           {doc?.relatedLinks?.map((l) => (
             <p className="admin-sub" key={l.href}><Link href={l.href}>{l.label}</Link></p>
           ))}
+          {!doc && defaults.note && <p className="admin-sub">{defaults.note}</p>}
         </div>
         <div className="editor-actions">
           {publicHref && <a className="arrow-link" href={publicHref} target="_blank" rel="noopener noreferrer">Client view</a>}

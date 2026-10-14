@@ -178,6 +178,8 @@ export type InvoiceInput = {
   issueDate: string;
   dueDate: string;
   items: LineItem[];
+  /** New invoices only: the update request this bills for. */
+  changeRequestId?: string;
 };
 
 export async function saveInvoice(input: InvoiceInput): Promise<Result<{ id: string; number: string }>> {
@@ -206,6 +208,15 @@ export async function saveInvoice(input: InvoiceInput): Promise<Result<{ id: str
         return tx.invoice.update({ where: { id: input.id }, data: { ...data, items: { create: itemRows } } });
       })
     : await prisma.invoice.create({ data: { ...data, number: await nextNumber("invoice"), items: { create: itemRows } } });
+
+  // Billing an update request: link it, if it's this client's and not billed yet.
+  if (!input.id && input.changeRequestId) {
+    const linked = await prisma.changeRequest.updateMany({
+      where: { id: input.changeRequestId, clientId: client.id, invoiceId: null },
+      data: { invoiceId: invoice.id },
+    });
+    if (linked.count) revalidatePath(`/admin/requests/update/${input.changeRequestId}`);
+  }
 
   revalidatePath("/admin/invoices");
   revalidatePath(`/admin/clients/${client.id}`);

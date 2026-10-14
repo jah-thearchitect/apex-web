@@ -12,7 +12,7 @@ export default async function EditInvoice({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const inv = await prisma.invoice.findUnique({
     where: { id },
-    include: { items: { orderBy: { position: "asc" } }, quote: { select: { id: true, number: true } } },
+    include: { items: { orderBy: { position: "asc" } }, quote: { select: { id: true, number: true } }, changeRequest: { select: { id: true, kind: true } } },
   });
   if (!inv) notFound();
   const ctx = await editorContext(inv.clientId);
@@ -39,6 +39,7 @@ export default async function EditInvoice({ params }: { params: Promise<{ id: st
         relatedLinks: [
           { label: "View client", href: `/admin/clients/${inv.clientId}` },
           ...(inv.quote ? [{ label: `From quote ${inv.quote.number}`, href: `/admin/quotes/${inv.quote.id}` }] : []),
+          ...(inv.changeRequest ? [{ label: `From update request: ${inv.changeRequest.kind}`, href: `/admin/requests/update/${inv.changeRequest.id}` }] : []),
         ],
       }}
     />

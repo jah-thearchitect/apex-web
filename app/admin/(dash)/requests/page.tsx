@@ -15,7 +15,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     prisma.changeRequest.findMany({
       where: all ? {} : { status: { not: "DONE" } },
       orderBy: { createdAt: "desc" },
-      include: { client: { select: { businessName: true } } },
+      include: { client: { select: { businessName: true } }, invoice: { select: { number: true, status: true } } },
       take: 200,
     }),
     prisma.buildBrief.findMany({ orderBy: { updatedAt: "desc" }, include: { client: { select: { businessName: true } } }, take: 100 }),
@@ -49,7 +49,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
                 <td><Link href={`/admin/requests/update/${r.id}`}>{r.client.businessName}</Link><br /><small>{r.name}</small></td>
                 <td>{r.kind}<br /><small>{r.details.length > 90 ? `${r.details.slice(0, 90)}…` : r.details}</small></td>
                 <td><span className={`pill ${r.urgency.startsWith("Urgent") ? "req-urgent" : ""}`}>{r.urgency}</span></td>
-                <td><span className={`pill ${r.status === "DONE" ? "pill-live" : r.status === "NEW" ? "pill-warn" : ""}`}>{REQ[r.status]}</span></td>
+                <td><span className={`pill ${r.status === "DONE" ? "pill-live" : r.status === "NEW" ? "pill-warn" : ""}`}>{REQ[r.status]}</span>{r.invoice && <><br /><small>{r.invoice.number} &middot; {r.invoice.status === "PAID" ? "paid" : "billed"}</small></>}</td>
                 <td>{formatDate(r.createdAt)}</td>
               </tr>
             ))}
