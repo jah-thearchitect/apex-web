@@ -35,12 +35,12 @@ export function invoiceDisplayStatus(inv: { status: string; dueDate: Date }): Di
   return inv.status === "VIEWED" ? "Viewed" : "Sent";
 }
 
-function esc(s: string) {
+export function esc(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // Shared light, table-based email shell (matches the Minutes emails).
-function emailShell(heading: string, bodyHtml: string, cta: { label: string; url: string }, footer: string) {
+export function emailShell(heading: string, bodyHtml: string, cta: { label: string; url: string }, footer: string) {
   return `<!doctype html><html><body style="margin:0;padding:0;background:#F1F1EE;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EE;"><tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
@@ -59,9 +59,9 @@ function emailShell(heading: string, bodyHtml: string, cta: { label: string; url
 </table></td></tr></table></body></html>`;
 }
 
-const P = (s: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#2b2d31;">${s}</p>`;
+export const P = (s: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#2b2d31;">${s}</p>`;
 
-async function send(to: string, subject: string, html: string, text: string) {
+export async function send(to: string, subject: string, html: string, text: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BILLING_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) throw new Error("Email isn't configured (RESEND_API_KEY / BILLING_FROM_EMAIL).");

@@ -29,6 +29,7 @@ export function SiteFooter() {
             <li><Link href="/clients">Clients &amp; Builds</Link></li>
             <li><Link href="/consultation">Consultation</Link></li>
             <li><Link href="/consultation#inquiry">Contact</Link></li>
+            <li><Link href="/update">Client Updates</Link></li>
           </ul>
         </div>
       </div>

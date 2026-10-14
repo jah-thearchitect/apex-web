@@ -124,10 +124,16 @@ model Client {
   status           ClientStatus  @default(LEAD)
   paymentMethod    PaymentMethod @default(STRIPE)
   stripeCustomerId String?
+  // Secret in the client's permanent update-request link (/update/<token>).
+  requestToken     String       @unique @default(dbgenerated("replace((gen_random_uuid())::text, '-'::text, ''::text)"))
+  // Last time the footer "Client updates" lookup emailed that link (throttle).
+  updateLinkSentAt DateTime?
   contactId        String?      @unique
   contact          Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
   quotes           Quote[]
   invoices         Invoice[]
+  buildBriefs      BuildBrief[]
+  changeRequests   ChangeRequest[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -224,6 +230,7 @@ model Invoice {
   // "Did it arrive?" reminders to the firm for Gusto/offline invoices.
   paymentNudgeAt        DateTime?
   paymentNudgeCount     Int           @default(0)
+  buildBrief            BuildBrief?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -338,4 +345,65 @@ model Booking {
   updatedAt      DateTime      @updatedAt
 
   @@index([startAt])
+}
+
+// ---------- Build briefs & update requests ----------
+
+enum BriefStatus {
+  SENT
+  STARTED
+  SUBMITTED
+}
+
+// The build request form a client fills in after paying a deposit (or when
+// sent by hand for a prototype deal). `token` is the secret in their link
+// (/brief/<token>). `answers` is keyed by question id from
+// lib/briefQuestions.ts; uploaded files are stored under briefs/<id>/ in the
+// private Blob store and listed inside the answers.
+model BuildBrief {
+  id          String      @id @default(cuid())
+  token       String      @unique @default(cuid())
+  clientId    String
+  client      Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoiceId   String?     @unique
+  invoice     Invoice?    @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  status      BriefStatus @default(SENT)
+  answers     Json        @default("{}")
+  step        Int         @default(0)
+  sentAt      DateTime?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([clientId])
+}
+
+enum ChangeRequestStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+}
+
+// A change or update an existing client asks for on their build, sent from
+// their permanent link. Files live under requests/<clientId>/ in Blob.
+model ChangeRequest {
+  id          String              @id @default(cuid())
+  clientId    String
+  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  build       String
+  kind        String
+  details     String
+  location    String              @default("")
+  urgency     String
+  files       Json                @default("[]")
+  status      ChangeRequestStatus @default(NEW)
+  completedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([clientId])
+  @@index([status])
 }

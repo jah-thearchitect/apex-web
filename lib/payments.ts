@@ -1,5 +1,6 @@
 import "server-only";
 import { emailPaymentReceipt, notifyFirm } from "./billing";
+import { startBriefForDeposit } from "./briefs";
 import { formatMoney } from "./money";
 import { prisma } from "./prisma";
 
@@ -33,6 +34,8 @@ export async function markInvoicePaid(
       `${inv.client.businessName} paid invoice ${inv.number} (${inv.title}).`,
       `Amount: ${formatMoney(payment.amountCents)} via ${payment.method}.`,
     ]);
+    // A paid deposit sends the client their build brief.
+    if (inv.kind === "DEPOSIT") await startBriefForDeposit(inv.id);
   }
   return true;
 }

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { logout } from "@/app/admin/actions";
+import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { LogoMark } from "@/components/LogoMark";
 
 export default async function AdminDash({ children }: { children: React.ReactNode }) {
   await requireAdmin();
+  const newRequests = await prisma.changeRequest.count({ where: { status: "NEW" } });
   return (
     <>
       <header className="admin-bar">
@@ -20,6 +22,7 @@ export default async function AdminDash({ children }: { children: React.ReactNod
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/invoices">Invoices</Link>
             <Link href="/admin/bookings">Bookings</Link>
+            <Link href="/admin/requests">Requests{newRequests > 0 && <span className="nav-count">{newRequests}</span>}</Link>
             <span className="admin-nav-sep" aria-hidden="true" />
             <Link href="/admin/posts">Posts</Link>
             <Link href="/admin/contacts">Contacts</Link>
