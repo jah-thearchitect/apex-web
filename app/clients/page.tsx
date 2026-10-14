@@ -25,7 +25,8 @@ const QUALIFIERS = [
 
 // Logos live in /public/images/builds. No href = not live yet (tile shows
 // "In progress" and isn't a link). `dark` puts light-colored logos on ink.
-type Build = { name: string; logo: string; href?: string; dark?: boolean };
+// `domain` shows as plain text under the name (for a build that isn't linked yet).
+type Build = { name: string; logo: string; href?: string; domain?: string; dark?: boolean };
 const BUILDS: Build[] = [
   { name: "Affordable Living & Supportive Services", logo: "alss", href: "https://affordablelivingservices.org" },
   { name: "Nola's Creationz", logo: "nolas-creationz", href: "https://nolascreationz.com" },
@@ -33,7 +34,7 @@ const BUILDS: Build[] = [
   { name: "Prospects", logo: "prospects", href: "https://prospectsrecruiting.com" },
   { name: "Elite Speed Athletics", logo: "elite-speed", href: "https://elitespeedathletics.com" },
   { name: "Elite Falcons", logo: "ben-lippen", href: "https://www.elite-falcons.com" },
-  { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", dark: true },
+  { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", domain: "recruitingshowcase.com", dark: true },
   { name: "Toys for Tots 5K Trail Run", logo: "toys-for-tots-5k", href: "https://toys4tots5k.vercel.app" },
 ];
 
@@ -90,6 +91,7 @@ function SelectedBuilds() {
                   <img src={`/images/builds/${b.logo}.webp`} alt={b.name} loading="lazy" />
                 </span>
                 <span className="tag">{b.href ? b.name : `${b.name} · In progress`}</span>
+                  {b.domain && <span className="tag domain">{b.domain}</span>}
               </>
             );
             return b.href ? (
