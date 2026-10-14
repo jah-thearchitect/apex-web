@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
-import { FeatureImage, PhotoHero } from "@/components/SiteImages";
+import { PhotoHero } from "@/components/SiteImages";
 
 export const metadata: Metadata = {
   title: "Clients & Builds",
@@ -40,7 +40,7 @@ const BUILDS: Build[] = [
 export default function ClientsPage() {
   return (
     <PageShell>
-      <PhotoHero src="/images/photo-lobby.webp" position="center 40%">
+      <PhotoHero src="/images/clients-skyline.webp" position="center 55%">
           <p className="eyebrow">CLIENTS &amp; BUILDS</p>
           <h1>Real Businesses, Real Builds</h1>
           <p>
@@ -65,9 +65,6 @@ export default function ClientsPage() {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "clamp(40px, 6vw, 64px)" }}>
-            <FeatureImage src="/images/clients-skyline.webp" />
-          </div>
         </div>
       </section>
     </PageShell>
@@ -76,7 +73,7 @@ export default function ClientsPage() {
 
 function SelectedBuilds() {
   return (
-    <section>
+    <section className="builds-after-hero">
       <div className="wrap">
         <div className="section-head">
           <p className="eyebrow">SELECTED BUILDS</p>
