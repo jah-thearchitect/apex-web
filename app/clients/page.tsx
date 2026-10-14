@@ -48,6 +48,8 @@ export default function ClientsPage() {
           </p>
       </PhotoHero>
 
+      <SelectedBuilds />
+
       <section className="on-paper">
         <div className="wrap">
           <div className="section-head">
@@ -63,45 +65,48 @@ export default function ClientsPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section>
-        <div className="wrap">
-          <div style={{ marginBottom: "clamp(40px, 6vw, 64px)" }}>
+          <div style={{ marginTop: "clamp(40px, 6vw, 64px)" }}>
             <FeatureImage src="/images/clients-skyline.webp" />
-          </div>
-          <div className="section-head">
-            <p className="eyebrow">SELECTED BUILDS</p>
-            <h2>Client Builds</h2>
-            <p>
-              Real business owners who were ready to expand to the next level, and partnered with the firm to get there. Each logo links through to the live build.
-            </p>
-          </div>
-          <div className="logo-grid">
-            {BUILDS.map((b) => {
-              const inner = (
-                <>
-                  <span className={`logo-face${b.dark ? " dark" : ""}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/images/builds/${b.logo}.webp`} alt={b.name} loading="lazy" />
-                  </span>
-                  <span className="tag">{b.href ? b.name : `${b.name} · In progress`}</span>
-                </>
-              );
-              return b.href ? (
-                <a className="logo-tile" key={b.logo} href={b.href} target="_blank" rel="noopener noreferrer">
-                  {inner}
-                </a>
-              ) : (
-                <div className="logo-tile static" key={b.logo}>
-                  {inner}
-                </div>
-              );
-            })}
           </div>
         </div>
       </section>
     </PageShell>
+  );
+}
+
+function SelectedBuilds() {
+  return (
+    <section>
+      <div className="wrap">
+        <div className="section-head">
+          <p className="eyebrow">SELECTED BUILDS</p>
+          <p>
+            Real business owners who were ready to expand to the next level, and partnered with the firm to get there. Each logo links through to the live build.
+          </p>
+        </div>
+        <div className="logo-grid">
+          {BUILDS.map((b) => {
+            const inner = (
+              <>
+                <span className={`logo-face${b.dark ? " dark" : ""}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/images/builds/${b.logo}.webp`} alt={b.name} loading="lazy" />
+                </span>
+                <span className="tag">{b.href ? b.name : `${b.name} · In progress`}</span>
+              </>
+            );
+            return b.href ? (
+              <a className="logo-tile" key={b.logo} href={b.href} target="_blank" rel="noopener noreferrer">
+                {inner}
+              </a>
+            ) : (
+              <div className="logo-tile static" key={b.logo}>
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
