@@ -23,12 +23,18 @@ const QUALIFIERS = [
   },
 ];
 
-// Text wordmarks until the owner sends logo files; keep the same links.
-const BUILDS = [
-  { name: "Elite Speed Athletics", href: "https://elitespeedathletics.com" },
-  { name: "Affordable Living & Supportive Services", href: "https://affordablelivingservices.org" },
-  { name: "Nolaz Creationz", href: "https://nolazcreationz.com" },
-  { name: "Ben Lippen Athletics", href: "https://benlippenathletics.com" },
+// Logos live in /public/images/builds. No href = not live yet (tile shows
+// "In progress" and isn't a link). `dark` puts light-colored logos on ink.
+type Build = { name: string; logo: string; href?: string; dark?: boolean };
+const BUILDS: Build[] = [
+  { name: "Committed", logo: "committed", href: "https://www.justcommitted.com" },
+  { name: "Prospects", logo: "prospects", href: "https://prospectsrecruiting.com" },
+  { name: "Elite Speed Athletics", logo: "elite-speed", href: "https://elitespeedathletics.com" },
+  { name: "Ben Lippen Athletics", logo: "ben-lippen", href: "https://benlippenathletics.com" },
+  { name: "Nola's Creationz", logo: "nolas-creationz", href: "https://nolazcreationz.com" },
+  { name: "Affordable Living & Supportive Services", logo: "alss", href: "https://affordablelivingservices.org" },
+  { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", dark: true },
+  { name: "Toys for Tots 5K Trail Run", logo: "toys-for-tots-5k", href: "https://toys4tots5k.vercel.app" },
 ];
 
 export default function ClientsPage() {
@@ -69,16 +75,30 @@ export default function ClientsPage() {
             <p className="eyebrow">SELECTED BUILDS</p>
             <h2>Client Builds</h2>
             <p>
-              Real business owners who were ready to expand to the next level, and partnered with the firm to get there. Each name below links through to the live build &mdash; logo artwork is on its way.
+              Real business owners who were ready to expand to the next level, and partnered with the firm to get there. Each logo links through to the live build.
             </p>
           </div>
           <div className="logo-grid">
-            {BUILDS.map((b) => (
-              <a className="logo-tile" key={b.href} href={b.href} target="_blank" rel="noopener noreferrer">
-                <span className="mark">{b.name}</span>
-                <span className="tag">Logo coming soon</span>
-              </a>
-            ))}
+            {BUILDS.map((b) => {
+              const inner = (
+                <>
+                  <span className={`logo-face${b.dark ? " dark" : ""}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/images/builds/${b.logo}.webp`} alt={b.name} loading="lazy" />
+                  </span>
+                  <span className="tag">{b.href ? b.name : `${b.name} · In progress`}</span>
+                </>
+              );
+              return b.href ? (
+                <a className="logo-tile" key={b.logo} href={b.href} target="_blank" rel="noopener noreferrer">
+                  {inner}
+                </a>
+              ) : (
+                <div className="logo-tile static" key={b.logo}>
+                  {inner}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

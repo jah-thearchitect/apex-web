@@ -265,14 +265,19 @@ section{ padding-block: var(--section-pad); position: relative; }
 .logo-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 @media (max-width: 760px){ .logo-grid{ grid-template-columns: repeat(2, 1fr); } }
 .logo-tile{
-  aspect-ratio: 3 / 2; border: 1px dashed var(--line-paper);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  padding: 16px; text-align: center; text-decoration: none;
-  color: var(--on-paper); transition: border-color .18s ease, background-color .18s ease;
+  border: 1px solid var(--line-paper);
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px 10px 12px; text-align: center; text-decoration: none;
+  color: var(--on-paper); transition: border-color .18s ease, transform .18s ease;
 }
-.logo-tile:hover{ border-color: var(--gold); background: rgba(180,134,60,0.06); }
-.logo-tile .mark{ font-family: var(--font-serif); font-style: italic; font-size: 1.05rem; line-height: 1.25; color: var(--on-paper); }
-.logo-tile .tag{ font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-paper-faint); }
+a.logo-tile:hover{ border-color: var(--gold); transform: translateY(-2px); }
+/* Client logos keep their own colors, so each sits on a neutral face. */
+.logo-face{
+  position: relative; aspect-ratio: 3 / 2; background: #fff;
+}
+.logo-face.dark{ background: #15181d; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
+.logo-face img{ position: absolute; inset: 16% 12%; width: 76%; height: 68%; object-fit: contain; display: block; }
+.logo-tile .tag{ font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-paper-faint); line-height: 1.5; }
 
 /* ---------- PROCESS ---------- */
 .process{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
