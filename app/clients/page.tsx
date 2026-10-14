@@ -27,12 +27,12 @@ const QUALIFIERS = [
 // "In progress" and isn't a link). `dark` puts light-colored logos on ink.
 type Build = { name: string; logo: string; href?: string; dark?: boolean };
 const BUILDS: Build[] = [
+  { name: "Affordable Living & Supportive Services", logo: "alss", href: "https://affordablelivingservices.org" },
+  { name: "Nola's Creationz", logo: "nolas-creationz", href: "https://nolascreationz.com" },
   { name: "Committed", logo: "committed", href: "https://www.justcommitted.com" },
   { name: "Prospects", logo: "prospects", href: "https://prospectsrecruiting.com" },
   { name: "Elite Speed Athletics", logo: "elite-speed", href: "https://elitespeedathletics.com" },
   { name: "Elite Falcons", logo: "ben-lippen", href: "https://www.elite-falcons.com" },
-  { name: "Nola's Creationz", logo: "nolas-creationz", href: "https://nolascreationz.com" },
-  { name: "Affordable Living & Supportive Services", logo: "alss", href: "https://affordablelivingservices.org" },
   { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", dark: true },
   { name: "Toys for Tots 5K Trail Run", logo: "toys-for-tots-5k", href: "https://toys4tots5k.vercel.app" },
 ];
