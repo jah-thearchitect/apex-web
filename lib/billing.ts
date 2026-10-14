@@ -61,12 +61,20 @@ export function emailShell(heading: string, bodyHtml: string, cta: { label: stri
 
 export const P = (s: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#2b2d31;">${s}</p>`;
 
+// The firm gets a blind copy of every client email (quotes, invoices,
+// receipts, briefs, update links), since Resend sends don't land in Gmail's
+// Sent folder. Skipped when the recipient is that same inbox.
+function firmCopy(to: string) {
+  const bcc = process.env.CLIENT_BCC_EMAIL || process.env.ADMIN_NOTIFY_EMAIL || process.env.INQUIRY_TO_EMAIL;
+  return bcc && bcc.trim().toLowerCase() !== to.trim().toLowerCase() ? bcc : undefined;
+}
+
 export async function send(to: string, subject: string, html: string, text: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BILLING_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) throw new Error("Email isn't configured (RESEND_API_KEY / BILLING_FROM_EMAIL).");
   const replyTo = process.env.BILLING_REPLY_TO || undefined;
-  const { error } = await new Resend(apiKey).emails.send({ from, to, subject, html, text, replyTo });
+  const { error } = await new Resend(apiKey).emails.send({ from, to, subject, html, text, replyTo, bcc: firmCopy(to) });
   if (error) throw new Error(error.message);
 }
 
