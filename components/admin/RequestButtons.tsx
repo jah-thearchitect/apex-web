@@ -50,7 +50,7 @@ export function CopyLink({ url }: { url: string }) {
   );
 }
 
-const LABEL: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", DONE: "Done" };
+const LABEL: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", WAITING: "Waiting on client", DONE: "Done" };
 
 export function RequestStatusPicker({ id, status }: { id: string; status: string }) {
   const [pending, start] = useTransition();

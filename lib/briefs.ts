@@ -6,6 +6,8 @@ import { SITE_URL } from "./site";
 
 export const briefUrl = (token: string) => `${SITE_URL}/brief/${token}`;
 export const updateUrl = (token: string) => `${SITE_URL}/update/${token}`;
+/** A single request's thread, where the client answers follow-up questions. */
+export const requestUrl = (clientToken: string, requestId: string) => `${SITE_URL}/update/${clientToken}/r/${requestId}`;
 
 const firstName = (full: string) => full.split(/\s+/)[0] || "there";
 
@@ -64,6 +66,30 @@ export async function emailUpdateLink(client: ClientLite) {
   );
   const text = `Hi ${firstName(client.contactName)},\n\nUse this link anytime you need a change on your build: new text or photos, a new page or feature, or something that isn't working. It's yours to keep, so bookmark it.\n\n${updateUrl(client.requestToken)}`;
   await send(client.email, `Your update request link for ${client.businessName}`, html, text);
+}
+
+/** The firm's follow-up question on an update request. Throws on failure. */
+export async function emailRequestQuestion(
+  req: { id: string; kind: string; name: string; email: string; details: string },
+  client: ClientLite,
+  question: string
+) {
+  const s = await getSettings();
+  const url = requestUrl(client.requestToken, req.id);
+  const asked = esc(question).replace(/\n/g, "<br>");
+  const original = req.details.length > 300 ? `${req.details.slice(0, 300)}…` : req.details;
+  const html = emailShell(
+    "A quick question about your request",
+    P(`Hi ${esc(firstName(req.name))},`) +
+      P(`About your update request (<strong>${esc(req.kind)}</strong>):`) +
+      `<div style="margin:0 0 18px;padding:14px 18px;border-left:3px solid #B4863C;background:#F6F4EE;font-size:16px;line-height:1.6;color:#101113;">${asked}</div>` +
+      P("Answer with the button below, where you can also attach files. Replying to this email works too.") +
+      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>`,
+    { label: "Answer the question", url },
+    `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
+  );
+  const text = `Hi ${firstName(req.name)},\n\nAbout your update request (${req.kind}):\n\n${question}\n\nAnswer here (you can attach files): ${url}\n\nYour request: ${original}`;
+  await send(req.email, `Question about your update request: ${req.kind}`, html, text);
 }
 
 /** "We got it" to whoever submitted a brief or request. Never throws. */

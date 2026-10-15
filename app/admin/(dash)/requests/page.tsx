@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Requests" };
 
 const BRIEF: Record<string, string> = { SENT: "Sent", STARTED: "In progress", SUBMITTED: "Submitted" };
-const REQ: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", DONE: "Done" };
+const REQ: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", WAITING: "Waiting on client", DONE: "Done" };
 
 export default async function RequestsPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const { show } = await searchParams;

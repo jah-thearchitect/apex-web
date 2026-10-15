@@ -383,6 +383,7 @@ model BuildBrief {
 enum ChangeRequestStatus {
   NEW
   IN_PROGRESS
+  WAITING // asked the client a follow-up question; back to NEW when they reply
   DONE
 }
 
@@ -404,10 +405,30 @@ model ChangeRequest {
   // The invoice billed for this request, if any (created from the request page).
   invoiceId   String?             @unique
   invoice     Invoice?            @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  messages    RequestMessage[]
   completedAt DateTime?
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
   @@index([clientId])
   @@index([status])
+}
+
+enum MessageFrom {
+  FIRM
+  CLIENT
+}
+
+// Follow-up thread on an update request: the firm's questions (emailed to
+// the client) and the client's replies from /update/<token>/r/<requestId>.
+model RequestMessage {
+  id        String        @id @default(cuid())
+  requestId String
+  request   ChangeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  from      MessageFrom
+  body      String
+  files     Json          @default("[]")
+  createdAt DateTime      @default(now())
+
+  @@index([requestId])
 }

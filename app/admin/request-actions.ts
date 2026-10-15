@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { emailBriefLink, emailUpdateLink } from "@/lib/briefs";
+import { emailBriefLink, emailRequestQuestion, emailUpdateLink } from "@/lib/briefs";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 
@@ -49,7 +49,31 @@ export async function sendUpdateLink(clientId: string): Promise<Result> {
   return { ok: true, message: `Update link sent to ${client.email}.` };
 }
 
-const STATUSES = ["NEW", "IN_PROGRESS", "DONE"] as const;
+/**
+ * Emails the client a follow-up question on their update request, records
+ * it in the request's thread, and marks the request as waiting on them.
+ */
+export async function askClient(requestId: string, question: string): Promise<Result> {
+  await requireAdmin();
+  const body = question.trim().slice(0, 4000);
+  if (!body) return { ok: false, error: "Write your question first." };
+  const req = await prisma.changeRequest.findUnique({ where: { id: requestId }, include: { client: true } });
+  if (!req) return { ok: false, error: "Request not found." };
+  try {
+    await emailRequestQuestion(req, req.client, body);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "The email didn't send." };
+  }
+  await prisma.$transaction([
+    prisma.requestMessage.create({ data: { requestId, from: "FIRM", body } }),
+    prisma.changeRequest.update({ where: { id: requestId }, data: { status: "WAITING", completedAt: null } }),
+  ]);
+  revalidatePath(`/admin/requests/update/${requestId}`);
+  revalidatePath("/admin/requests");
+  return { ok: true, message: `Sent to ${req.email}.` };
+}
+
+const STATUSES = ["NEW", "IN_PROGRESS", "WAITING", "DONE"] as const;
 
 export async function setRequestStatus(id: string, status: string): Promise<Result> {
   await requireAdmin();

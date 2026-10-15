@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Client" };
 
 const BRIEF_STATUS: Record<string, string> = { SENT: "Sent", STARTED: "In progress", SUBMITTED: "Submitted" };
-const REQ_STATUS: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", DONE: "Done" };
+const REQ_STATUS: Record<string, string> = { NEW: "New", IN_PROGRESS: "In progress", WAITING: "Waiting on client", DONE: "Done" };
 const QUOTE_STATUS: Record<string, string> = { DRAFT: "Draft", SENT: "Sent", VIEWED: "Viewed", ACCEPTED: "Accepted", DECLINED: "Declined" };
 
 export default async function ClientDetail({ params }: { params: Promise<{ id: string }> }) {

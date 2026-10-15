@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AskClientForm } from "@/components/admin/AskClientForm";
 import { RequestStatusPicker } from "@/components/admin/RequestButtons";
+import { RequestThread } from "@/components/RequestThread";
 import { invoiceDisplayStatus } from "@/lib/billing";
 import type { FileRef } from "@/lib/briefQuestions";
 import { formatMoney, subtotal } from "@/lib/money";
@@ -14,7 +16,10 @@ const fileHref = (path: string) => `/api/admin/file/${path.split("/").map(encode
 
 export default async function UpdateRequestView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const r = await prisma.changeRequest.findUnique({ where: { id }, include: { client: true, invoice: { include: { items: true } } } });
+  const r = await prisma.changeRequest.findUnique({
+    where: { id },
+    include: { client: true, invoice: { include: { items: true } }, messages: { orderBy: { createdAt: "asc" } } },
+  });
   if (!r) notFound();
   const files = (Array.isArray(r.files) ? r.files : []) as FileRef[];
 
@@ -40,7 +45,7 @@ export default async function UpdateRequestView({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <RequestStatusPicker id={r.id} status={r.status} />
+      <RequestStatusPicker key={r.status} id={r.id} status={r.status} />
 
       <div className="brief-view">
         <section>
@@ -58,6 +63,11 @@ export default async function UpdateRequestView({ params }: { params: Promise<{ 
             ) : <dd className="empty">—</dd>}
             {r.completedAt && <><dt>Completed</dt><dd>{formatDate(r.completedAt)}</dd></>}
           </dl>
+        </section>
+        <section>
+          <h2>Follow-up</h2>
+          <RequestThread messages={r.messages} clientName={r.name} fileHref={fileHref} />
+          <AskClientForm requestId={r.id} email={r.email} />
         </section>
       </div>
     </>

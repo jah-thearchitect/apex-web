@@ -109,3 +109,22 @@ textarea.bq-input{ resize: vertical; min-height: 96px; line-height: 1.55; }
   .brief-view dd a{ color: #111; }
 }
 .nav-count{ display: inline-block; margin-left: 6px; min-width: 18px; padding: 0 5px; background: var(--gold); color: var(--ink); font-family: var(--font-mono); font-size: 0.66rem; line-height: 18px; text-align: center; }
+
+/* ---------- REQUEST FOLLOW-UP THREAD ---------- */
+.thread{ list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.thread li{ border: 1px solid var(--line-ink); padding: 14px 18px; background: var(--ink-2); }
+.thread li.from-firm{ border-left: 3px solid var(--gold); }
+.thread li.from-client{ border-left: 3px solid var(--accent); }
+.thread-meta{ font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-ink-faint); }
+.thread-body{ margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.thread-files{ margin-top: 8px; font-size: 0.86rem; color: var(--on-ink-soft); overflow-wrap: anywhere; }
+.thread-files a{ color: var(--accent-bright); }
+.request-summary{ margin-top: 28px; }
+.update .thread + .update-form, .request-summary + .update-form{ margin-top: 20px; }
+.ask-form{ display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.ask-form textarea{ background: var(--ink-2); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 0.98rem; padding: 0.8em 1em; width: 100%; resize: vertical; }
+.request-list{ margin-top: 28px; border: 1px solid var(--line-ink); padding: 16px 20px; }
+.request-list ul{ list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.request-list li{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.request-list li a{ color: var(--accent-bright); flex: 1; min-width: 160px; }
+.request-list li small{ color: var(--on-ink-faint); font-family: var(--font-mono); font-size: 0.72rem; }

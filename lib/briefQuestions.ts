@@ -333,3 +333,11 @@ export const UPDATE_KINDS = [
 ];
 
 export const UPDATE_URGENCY = ["No rush", "Within a week", "Within 48 hours", "Urgent: the site is broken"];
+
+/** How a request's status reads to the client. */
+export const CLIENT_STATUS: Record<string, string> = {
+  NEW: "Received",
+  IN_PROGRESS: "In progress",
+  WAITING: "Waiting on you",
+  DONE: "Done",
+};
