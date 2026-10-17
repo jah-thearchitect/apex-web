@@ -34,7 +34,7 @@ const BUILDS: Build[] = [
   { name: "Prospects", logo: "prospects", href: "https://prospectsrecruiting.com" },
   { name: "Elite Speed Athletics", logo: "elite-speed", href: "https://elitespeedathletics.com" },
   { name: "Elite Falcons", logo: "ben-lippen", href: "https://www.elite-falcons.com" },
-  { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", domain: "recruitingshowcase.com", dark: true },
+  { name: "Trackmasterz Recruiting Platform", logo: "trackmasterz", href: "https://recruitingshowcase.com", dark: true },
   { name: "Toys for Tots 5K Trail Run", logo: "toys-for-tots-5k", href: "https://toys4tots5k.vercel.app" },
 ];
 
