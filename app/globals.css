@@ -262,7 +262,7 @@ section{ padding-block: var(--section-pad); position: relative; }
 .type-card h3{ font-size: 1.2rem; font-weight: 500; }
 .type-card p{ color: var(--on-paper-soft); font-size: 0.95rem; }
 
-.logo-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.logo-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 @media (max-width: 760px){ .logo-grid{ grid-template-columns: repeat(2, 1fr); } }
 .logo-tile{
   border: 1px solid var(--line-paper);
