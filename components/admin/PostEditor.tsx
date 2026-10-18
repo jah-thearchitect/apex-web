@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { deletePost, publishPost, savePost, unpublishPost } from "@/app/admin/actions";
 import { slugify } from "@/lib/slug";
-import { importDocument } from "./importDoc";
+import { dataUrlToFile, importDocument } from "./importDoc";
 import { RichEditor } from "./RichEditor";
 import { uploadImage } from "./uploadImage";
 
@@ -142,17 +142,47 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
     try {
       const doc = await importDocument(file);
       setReplaceBody({ html: doc.html, n: Date.now() });
+      // Fill only the fields that are still empty.
       if (doc.title && !title.trim()) {
-        touch(setTitle)(doc.title);
-        if (!slugTouched) setSlug(slugify(doc.title));
+        setTitle(doc.title);
+        if (!slugTouched && !doc.slug) setSlug(slugify(doc.title));
+      }
+      if (doc.slug && !alreadySent && (!slugTouched || !slug)) {
+        setSlug(slugify(doc.slug));
+        setSlugTouched(true);
+      }
+      if (doc.summary && !excerpt.trim()) setExcerpt(doc.summary.slice(0, 400));
+      if (doc.seoTitle && !seoTitle.trim()) setSeoTitle(doc.seoTitle.slice(0, 120));
+      let coverNote = "";
+      if (doc.cover && !coverImage) {
+        try {
+          setCoverImage(await importCover(doc.cover));
+          if (doc.coverAlt && !coverAlt.trim()) setCoverAlt(doc.coverAlt.slice(0, 200));
+          coverNote = " with its cover image";
+        } catch {
+          coverNote = ", but the cover image didn't upload (add it with Upload cover image)";
+        }
       }
       setDirty(true);
-      setStatus(`Imported ${file.name}. Check the formatting, then save.`);
+      setStatus(`Imported ${file.name}${coverNote}. Check it over, then save.`);
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Import failed.");
     } finally {
       setImporting(false);
     }
+  }
+
+  // A cover from an imported file: a data: image is uploaded, an https link copied.
+  async function importCover(src: string): Promise<string> {
+    if (src.startsWith("data:")) return uploadImage(dataUrlToFile(src, "cover"));
+    const res = await fetch("/api/admin/import-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: src }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+    if (!res.ok || !json.url) throw new Error(json.error ?? "Cover didn't copy.");
+    return json.url;
   }
 
   const searchTitle = (seoTitle.trim() || title.trim() || "Post title") + " — Apex Capital Consultants";

@@ -4,7 +4,7 @@ import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
-import { looksLikeMarkdown, markdownToHtml, normalizeHtml } from "./importDoc";
+import { dataUrlToFile, looksLikeMarkdown, markdownToHtml, normalizeHtml } from "./importDoc";
 import { uploadImage } from "./uploadImage";
 
 const OURS = "/media/minutes/";
@@ -121,8 +121,7 @@ async function rehostImages(editor: Editor, status: (m: string) => void) {
     let next: string | null = null;
     try {
       if (src.startsWith("data:")) {
-        const blob = await (await fetch(src)).blob();
-        next = await uploadImage(new File([blob], "pasted." + (blob.type.split("/")[1] ?? "png"), { type: blob.type }));
+        next = await uploadImage(dataUrlToFile(src, "pasted"));
       } else if (src.startsWith("https://")) {
         const res = await fetch("/api/admin/import-image", {
           method: "POST",
