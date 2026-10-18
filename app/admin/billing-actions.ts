@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { emailInvoice, emailQuote, getSettings, nextNumber } from "@/lib/billing";
-import { recordContact, splitName } from "@/lib/contacts";
+import { recordContact, splitName, subscribeClient } from "@/lib/contacts";
 import { subtotal, type LineItem } from "@/lib/money";
 import { markInvoicePaid } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
@@ -80,6 +80,8 @@ export async function saveClient(input: ClientInput): Promise<Result> {
   const client = input.id
     ? await prisma.client.update({ where: { id: input.id }, data })
     : await prisma.client.create({ data });
+  // Every new client joins the newsletter (unless they've opted out before).
+  if (!input.id) await subscribeClient(email, contactName);
   revalidatePath("/admin/clients");
   revalidatePath(`/admin/clients/${client.id}`);
   return { ok: true, id: client.id };
@@ -96,6 +98,7 @@ export async function createClientFromContact(contactId: string) {
   const client = await prisma.client.create({
     data: { businessName: name, contactName: name, email: c.email, contactId: c.id },
   });
+  await subscribeClient(c.email, [c.firstName, c.lastName].filter(Boolean).join(" "));
   redirect(`/admin/clients/${client.id}?new=1`);
 }
 

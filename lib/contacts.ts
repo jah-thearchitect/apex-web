@@ -40,3 +40,22 @@ export function splitName(full: string) {
   const parts = full.trim().split(/\s+/);
   return { firstName: parts[0] ?? "", lastName: parts.slice(1).join(" ") || null };
 }
+
+/**
+ * Puts a new client on the Mastermind Minutes list. Someone who already
+ * unsubscribed stays unsubscribed (their opt-out wins), and an existing
+ * subscriber is left as is. Never throws: a list problem mustn't block
+ * creating the client.
+ */
+export async function subscribeClient(email: string, contactName: string) {
+  try {
+    const address = email.trim().toLowerCase();
+    const { firstName, lastName } = splitName(contactName);
+    const existing = await prisma.subscriber.findUnique({ where: { email: address } });
+    if (existing) return;
+    await prisma.subscriber.create({ data: { email: address, firstName: firstName.slice(0, 60), lastName: lastName?.slice(0, 80) ?? null, source: "client" } });
+    await recordContact({ email: address, firstName, lastName, source: "minutes" });
+  } catch (err) {
+    console.error("Adding client to newsletter failed:", err);
+  }
+}
