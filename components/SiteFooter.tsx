@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE_NAME, TAGLINE } from "@/lib/site";
+import { SITE_NAME, SOCIAL, TAGLINE } from "@/lib/site";
 import { LogoMark } from "@/components/LogoMark";
 
 export function SiteFooter() {
@@ -12,6 +12,12 @@ export function SiteFooter() {
             <LogoMark width={46} />
           </Link>
           <p className="foot-tagline">{TAGLINE}</p>
+          <a className="foot-social" href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer" aria-label="Apex Capital Consultants on Facebook">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor" d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.5V4.4c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8.1v3h2.5V21h2.9z" />
+            </svg>
+            <span>Follow on Facebook</span>
+          </a>
         </div>
         <div className="foot-col">
           <h4>What We Do</h4>

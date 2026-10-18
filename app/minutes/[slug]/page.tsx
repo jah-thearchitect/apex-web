@@ -5,7 +5,7 @@ import { NewsletterForm } from "@/components/NewsletterForm";
 import { PageShell } from "@/components/PageShell";
 import { cleanHtml, formatDate, readingMinutes } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, SOCIAL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 // article from the firm (and can show it with its image).
 function articleJsonLd(post: { slug: string; title: string; excerpt: string; coverImage: string | null; publishedAt: Date | null; updatedAt: Date; bodyHtml: string }) {
   const url = `${SITE_URL}/minutes/${post.slug}`;
-  const org = { "@type": "Organization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/brand/apex-mark-dark.png` } };
+  const org = { "@type": "Organization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/brand/apex-mark-dark.png` }, sameAs: Object.values(SOCIAL) };
   const data = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",

@@ -396,3 +396,8 @@ footer{ padding-block: 56px 40px; border-top: 1px solid var(--line-ink); }
 .more-posts a:hover{ color: var(--accent-bright); }
 .more-posts p{ color: var(--on-ink-soft); font-size: 0.95rem; margin-top: 6px; }
 .more-posts small{ display: block; margin-top: 8px; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; color: var(--on-ink-faint); }
+
+.foot-social{ display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; color: var(--on-ink-soft); text-decoration: none; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.foot-social svg{ width: 30px; height: 30px; padding: 6px; border: 1px solid var(--line-ink); border-radius: 50%; transition: border-color .18s ease, color .18s ease; }
+.foot-social:hover{ color: var(--accent-bright); }
+.foot-social:hover svg{ border-color: var(--accent); }

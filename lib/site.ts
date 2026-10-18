@@ -4,3 +4,8 @@ export const TAGLINE = "We build brands that make money.";
 export const DESCRIPTION =
   "Apex Capital Consultants is a brand management firm. We build and integrate the AI, platforms, marketing, and capital a business needs to start, expand, and make money, in any sector.";
 
+
+// The firm's social profiles (footer links + "sameAs" in structured data).
+export const SOCIAL = {
+  facebook: "https://www.facebook.com/ApexCapitalConsultants/",
+};
