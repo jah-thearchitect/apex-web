@@ -388,3 +388,11 @@ footer{ padding-block: 56px 40px; border-top: 1px solid var(--line-ink); }
 /* Builds grid directly under a photo hero: the hero's fade already spaces it. */
 .builds-after-hero{ padding-top: clamp(24px, 4vw, 40px); }
 .logo-tile .tag.domain{ text-transform: none; letter-spacing: 0.02em; color: var(--on-ink-soft); margin-top: -6px; }
+
+/* ---------- MINUTES: MORE POSTS ---------- */
+.more-posts{ list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line-ink); }
+.more-posts li{ padding: 20px 0; border-bottom: 1px solid var(--line-ink); }
+.more-posts a{ font-family: var(--font-serif); font-size: 1.35rem; color: var(--on-ink); text-decoration: none; }
+.more-posts a:hover{ color: var(--accent-bright); }
+.more-posts p{ color: var(--on-ink-soft); font-size: 0.95rem; margin-top: 6px; }
+.more-posts small{ display: block; margin-top: 8px; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; color: var(--on-ink-faint); }

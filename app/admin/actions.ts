@@ -47,6 +47,8 @@ export type PostInput = {
   slug: string;
   excerpt: string;
   coverImage: string | null;
+  coverAlt?: string;
+  seoTitle?: string;
   bodyHtml: string;
 };
 
@@ -67,6 +69,8 @@ export async function savePost(input: PostInput): Promise<SaveResult> {
     slug,
     excerpt: input.excerpt.trim().slice(0, 400),
     coverImage: input.coverImage?.startsWith("/media/minutes/") ? input.coverImage : null,
+    coverAlt: (input.coverAlt ?? "").trim().slice(0, 200),
+    seoTitle: (input.seoTitle ?? "").trim().slice(0, 120),
     bodyHtml: cleanHtml(input.bodyHtml),
   };
 

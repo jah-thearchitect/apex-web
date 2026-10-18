@@ -5,6 +5,7 @@ import { NewsletterForm } from "@/components/NewsletterForm";
 import { PageShell } from "@/components/PageShell";
 import { cleanHtml, formatDate, readingMinutes } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -15,19 +16,66 @@ async function getPost(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const post = await getPost((await params).slug);
   if (!post) return { title: "Not found" };
+  const url = `${SITE_URL}/minutes/${post.slug}`;
+  const description = post.excerpt || undefined;
+  const images = post.coverImage ? [{ url: `${SITE_URL}${post.coverImage}`, alt: post.coverAlt || post.title }] : undefined;
   return {
-    title: post.title,
-    description: post.excerpt || undefined,
-    openGraph: { type: "article", title: post.title, description: post.excerpt || undefined, images: post.coverImage ? [post.coverImage] : undefined },
+    title: post.seoTitle || post.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title: post.seoTitle || post.title,
+      description,
+      images,
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt.toISOString(),
+      authors: [SITE_NAME],
+      section: "The Mastermind Minutes",
+    },
+    twitter: { card: images ? "summary_large_image" : "summary", title: post.seoTitle || post.title, description, images: images?.map((i) => i.url) },
   };
+}
+
+// Article structured data, so search engines read the post as a dated
+// article from the firm (and can show it with its image).
+function articleJsonLd(post: { slug: string; title: string; excerpt: string; coverImage: string | null; publishedAt: Date | null; updatedAt: Date; bodyHtml: string }) {
+  const url = `${SITE_URL}/minutes/${post.slug}`;
+  const org = { "@type": "Organization", name: SITE_NAME, url: SITE_URL, logo: { "@type": "ImageObject", url: `${SITE_URL}/brand/apex-mark-dark.png` } };
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title.slice(0, 110),
+    description: post.excerpt || undefined,
+    image: post.coverImage ? [`${SITE_URL}${post.coverImage}`] : undefined,
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    author: org,
+    publisher: org,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    url,
+    wordCount: post.bodyHtml.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length,
+    isPartOf: { "@type": "Blog", name: "The Mastermind Minutes", url: `${SITE_URL}/minutes` },
+  };
+  // Escape "<" so post text can never close the script tag.
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const post = await getPost((await params).slug);
   if (!post) notFound();
+  // Internal links to other posts: good for readers and for search.
+  const more = await prisma.post.findMany({
+    where: { publishedAt: { not: null }, NOT: { id: post.id } },
+    orderBy: { publishedAt: "desc" },
+    take: 3,
+    select: { slug: true, title: true, excerpt: true, publishedAt: true },
+  });
 
   return (
     <PageShell>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: articleJsonLd(post) }} />
       <article>
         <section className="page-hero post-hero">
           <div className="wrap post-wrap">
@@ -42,12 +90,29 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="wrap post-wrap">
             {post.coverImage && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={post.coverImage} alt="" className="post-cover" />
+              <img src={post.coverImage} alt={post.coverAlt} className="post-cover" />
             )}
             <div className="prose" dangerouslySetInnerHTML={{ __html: cleanHtml(post.bodyHtml) }} />
           </div>
         </section>
       </article>
+
+      {more.length > 0 && (
+        <section style={{ paddingTop: 0 }}>
+          <div className="wrap post-wrap">
+            <p className="eyebrow">MORE FROM THE MINUTES</p>
+            <ul className="more-posts">
+              {more.map((m) => (
+                <li key={m.slug}>
+                  <Link href={`/minutes/${m.slug}`}>{m.title}</Link>
+                  {m.excerpt && <p>{m.excerpt}</p>}
+                  {m.publishedAt && <small>{formatDate(m.publishedAt)}</small>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="on-ink-2">
         <div className="wrap">

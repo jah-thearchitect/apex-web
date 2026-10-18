@@ -53,6 +53,9 @@ model Post {
   title       String
   excerpt     String    @default("")
   coverImage  String?
+  coverAlt    String    @default("")
+  // Optional headline for search results; the post title is used when blank.
+  seoTitle    String    @default("")
   bodyHtml    String    @default("")
   publishedAt DateTime?
   sentAt      DateTime?

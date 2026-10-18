@@ -3,10 +3,24 @@
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { looksLikeMarkdown, markdownToHtml, normalizeHtml } from "./importDoc";
 import { uploadImage } from "./uploadImage";
 
-export function RichEditor({ initialHtml, onChange }: { initialHtml: string; onChange: (html: string) => void }) {
+const OURS = "/media/minutes/";
+
+export function RichEditor({
+  initialHtml, onChange, replace, onStatus,
+}: {
+  initialHtml: string;
+  onChange: (html: string) => void;
+  /** New HTML to load (e.g. an imported file); `n` changes each time. */
+  replace?: { html: string; n: number } | null;
+  onStatus?: (message: string) => void;
+}) {
+  const editorRef = useRef<Editor | null>(null);
+  const status = (m: string) => onStatus?.(m);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -14,12 +28,54 @@ export function RichEditor({ initialHtml, onChange }: { initialHtml: string; onC
         heading: { levels: [2, 3] },
         link: { openOnClick: false, autolink: true, protocols: ["https", "http", "mailto"] },
       }),
-      Image,
+      // Pasted images may arrive as data: URLs; they're kept just long
+      // enough to be uploaded (rehostImages), and never saved as-is.
+      Image.configure({ allowBase64: true }),
     ],
     content: initialHtml,
-    editorProps: { attributes: { class: "prose rich-editor-body", "aria-label": "Post body" } },
+    editorProps: {
+      attributes: { class: "prose rich-editor-body", "aria-label": "Post body" },
+      transformPastedHTML: normalizeHtml,
+      handlePaste: (_view, event) => {
+        const ed = editorRef.current;
+        if (!ed) return false;
+        const files = imageFiles(event.clipboardData?.files);
+        if (files.length) {
+          void insertImages(ed, files, status);
+          return true;
+        }
+        const html = event.clipboardData?.getData("text/html") ?? "";
+        const text = event.clipboardData?.getData("text/plain") ?? "";
+        // Copied as Markdown (from a chat or a .md file): turn it into formatting.
+        if (!html && text && looksLikeMarkdown(text)) {
+          ed.chain().focus().insertContent(normalizeHtml(markdownToHtml(text))).run();
+          return true;
+        }
+        // Let the editor paste, then bring any outside images in-house.
+        setTimeout(() => void rehostImages(ed, status), 0);
+        return false;
+      },
+      handleDrop: (view, event) => {
+        const ed = editorRef.current;
+        const files = imageFiles(event.dataTransfer?.files);
+        if (!ed || !files.length) return false;
+        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos;
+        if (pos !== undefined) ed.commands.setTextSelection(pos);
+        void insertImages(ed, files, status);
+        return true;
+      },
+    },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
   });
+  editorRef.current = editor;
+
+  // Load imported content.
+  useEffect(() => {
+    if (!editor || !replace) return;
+    editor.commands.setContent(replace.html, { emitUpdate: true });
+    void rehostImages(editor, status);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, replace?.n]);
 
   return (
     <div className="rich-editor">
@@ -27,6 +83,69 @@ export function RichEditor({ initialHtml, onChange }: { initialHtml: string; onC
       <EditorContent editor={editor} />
     </div>
   );
+}
+
+function imageFiles(list: FileList | null | undefined) {
+  return Array.from(list ?? []).filter((f) => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+}
+
+async function insertImages(editor: Editor, files: File[], status: (m: string) => void) {
+  status(`Uploading ${files.length} image${files.length === 1 ? "" : "s"}…`);
+  for (const file of files) {
+    try {
+      const src = await uploadImage(file);
+      editor.chain().focus().setImage({ src, alt: "" }).run();
+    } catch (err) {
+      status(err instanceof Error ? err.message : "An image didn't upload.");
+      return;
+    }
+  }
+  status("Images added. Click one and add alt text with the Image button if needed.");
+}
+
+/**
+ * Uploads every image in the post that isn't stored on the site yet (pasted
+ * data: images, or links to Google Docs/other hosts) and points it at the
+ * copy. Any that can't be copied are removed, since they'd vanish anyway.
+ */
+async function rehostImages(editor: Editor, status: (m: string) => void) {
+  const foreign = new Set<string>();
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === "image" && typeof node.attrs.src === "string" && !node.attrs.src.startsWith(OURS)) foreign.add(node.attrs.src);
+  });
+  if (foreign.size === 0) return;
+  status(`Copying ${foreign.size} image${foreign.size === 1 ? "" : "s"} into the post…`);
+
+  let failed = 0;
+  for (const src of foreign) {
+    let next: string | null = null;
+    try {
+      if (src.startsWith("data:")) {
+        const blob = await (await fetch(src)).blob();
+        next = await uploadImage(new File([blob], "pasted." + (blob.type.split("/")[1] ?? "png"), { type: blob.type }));
+      } else if (src.startsWith("https://")) {
+        const res = await fetch("/api/admin/import-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: src }),
+        });
+        const json = (await res.json().catch(() => ({}))) as { url?: string };
+        next = res.ok && json.url ? json.url : null;
+      }
+    } catch {
+      next = null;
+    }
+    // Positions shift as we edit, so find this image again each time.
+    const { tr } = editor.state;
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name !== "image" || node.attrs.src !== src) return;
+      if (next) tr.setNodeMarkup(tr.mapping.map(pos), undefined, { ...node.attrs, src: next });
+      else tr.delete(tr.mapping.map(pos), tr.mapping.map(pos + node.nodeSize));
+    });
+    if (!next) failed++;
+    editor.view.dispatch(tr);
+  }
+  status(failed ? `${failed} image${failed === 1 ? "" : "s"} couldn't be copied and ${failed === 1 ? "was" : "were"} left out. Add ${failed === 1 ? "it" : "them"} with the Image button.` : "Images copied into the post.");
 }
 
 function Toolbar({ editor }: { editor: Editor }) {

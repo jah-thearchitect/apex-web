@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { deletePost, publishPost, savePost, unpublishPost } from "@/app/admin/actions";
 import { slugify } from "@/lib/slug";
+import { importDocument } from "./importDoc";
 import { RichEditor } from "./RichEditor";
 import { uploadImage } from "./uploadImage";
 
@@ -14,6 +15,8 @@ type ExistingPost = {
   slug: string;
   excerpt: string;
   coverImage: string | null;
+  coverAlt: string;
+  seoTitle: string;
   bodyHtml: string;
   published: boolean;
   sentAt: string | null;
@@ -28,7 +31,12 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
   const [slugTouched, setSlugTouched] = useState(!!post);
   const [excerpt, setExcerpt] = useState(post?.excerpt ?? "");
   const [coverImage, setCoverImage] = useState(post?.coverImage ?? null);
+  const [coverAlt, setCoverAlt] = useState(post?.coverAlt ?? "");
+  const [seoTitle, setSeoTitle] = useState(post?.seoTitle ?? "");
   const [bodyHtml, setBodyHtml] = useState(post?.bodyHtml ?? "");
+  // Bumped to push imported HTML into the editor.
+  const [replaceBody, setReplaceBody] = useState<{ html: string; n: number } | null>(null);
+  const [importing, setImporting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -55,7 +63,7 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
   }
 
   async function save(): Promise<string | null> {
-    const res = await savePost({ id, title, slug, excerpt, coverImage, bodyHtml });
+    const res = await savePost({ id, title, slug, excerpt, coverImage, coverAlt, seoTitle, bodyHtml });
     if (!res.ok) {
       setStatus(res.error);
       return null;
@@ -122,6 +130,33 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
       setCoverUploading(false);
     }
   }
+
+  async function onImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const hasBody = bodyHtml.replace(/<[^>]+>/g, "").trim().length > 0;
+    if (hasBody && !window.confirm(`Replace the current post with ${file.name}?`)) return;
+    setImporting(true);
+    setStatus("");
+    try {
+      const doc = await importDocument(file);
+      setReplaceBody({ html: doc.html, n: Date.now() });
+      if (doc.title && !title.trim()) {
+        touch(setTitle)(doc.title);
+        if (!slugTouched) setSlug(slugify(doc.title));
+      }
+      setDirty(true);
+      setStatus(`Imported ${file.name}. Check the formatting, then save.`);
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : "Import failed.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  const searchTitle = (seoTitle.trim() || title.trim() || "Post title") + " — Apex Capital Consultants";
+  const searchDesc = excerpt.trim() || "Add a summary: this is the description Google shows under your link.";
 
   return (
     <div className="post-editor">
@@ -202,17 +237,38 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
           </div>
         </label>
         <label className="field">
-          <span>Summary <small>shown on the Minutes page and in link previews</small></span>
-          <textarea value={excerpt} maxLength={400} rows={2} onChange={(e) => touch(setExcerpt)(e.target.value)} />
+          <span>
+            Summary <small>shown on the Minutes page, in Google results, and in link previews &middot;{" "}
+            <b className={excerpt.length > 160 ? "count-over" : excerpt.length >= 70 ? "count-ok" : ""}>{excerpt.length}/160</b></small>
+          </span>
+          <textarea value={excerpt} maxLength={400} rows={2} onChange={(e) => touch(setExcerpt)(e.target.value)} placeholder="One or two sentences on what the reader gets from this post." />
         </label>
+        <details className="seo-box" open={!!seoTitle}>
+          <summary>Search &amp; sharing</summary>
+          <label className="field">
+            <span>
+              SEO title <small>optional; the headline Google shows. Blank uses the post title &middot;{" "}
+              <b className={(seoTitle || title).length > 60 ? "count-over" : ""}>{(seoTitle || title).length}/60</b></small>
+            </span>
+            <input value={seoTitle} maxLength={120} onChange={(e) => touch(setSeoTitle)(e.target.value)} placeholder={title || "How to Get More Customers From Your Website"} />
+          </label>
+          <div className="serp" aria-label="Google preview">
+            <p className="serp-url">acc-funds.com &rsaquo; minutes &rsaquo; {slugify(slug || title) || "post-url"}</p>
+            <p className="serp-title">{searchTitle}</p>
+            <p className="serp-desc">{searchDesc}</p>
+          </div>
+        </details>
         <div className="field">
           <span>Cover image</span>
           {coverImage ? (
-            <div className="cover-preview">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={coverImage} alt="" />
-              <button type="button" className="btn-ghost" onClick={() => touch(setCoverImage)(null)}>Remove</button>
-            </div>
+            <>
+              <div className="cover-preview">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={coverImage} alt="" />
+                <button type="button" className="btn-ghost" onClick={() => touch(setCoverImage)(null)}>Remove</button>
+              </div>
+              <input className="alt-input" value={coverAlt} maxLength={200} onChange={(e) => touch(setCoverAlt)(e.target.value)} placeholder="Describe the image for Google and screen readers (alt text)" />
+            </>
           ) : (
             <label className="btn-ghost file-btn">
               {coverUploading ? "Uploading…" : "Upload cover image"}
@@ -221,8 +277,14 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
           )}
         </div>
         <div className="field">
-          <span>Post</span>
-          <RichEditor initialHtml={bodyHtml} onChange={touch(setBodyHtml)} />
+          <span className="post-label-row">
+            Post <small>Paste from Google Docs, Word, or a chat: headings, lists, links, and images come with it.</small>
+            <label className="btn-ghost file-btn import-btn">
+              {importing ? "Importing…" : "Import file"}
+              <input type="file" accept=".docx,.md,.markdown,.txt,.html,.htm" hidden onChange={onImport} disabled={importing} />
+            </label>
+          </span>
+          <RichEditor initialHtml={bodyHtml} onChange={touch(setBodyHtml)} replace={replaceBody} onStatus={setStatus} />
         </div>
       </div>
 

@@ -6,12 +6,17 @@ import { PageShell } from "@/components/PageShell";
 import { PhotoHero } from "@/components/SiteImages";
 import { formatDate } from "@/lib/posts";
 import { prisma } from "@/lib/prisma";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "The Mastermind Minutes",
+  title: "The Mastermind Minutes: Business Growth Blog",
   description: "Short, direct reads on scaling, branding, and capital from Apex Capital Consultants.",
+  alternates: {
+    canonical: `${SITE_URL}/minutes`,
+    types: { "application/rss+xml": `${SITE_URL}/minutes/feed.xml` },
+  },
 };
 
 export default async function MinutesIndex() {

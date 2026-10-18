@@ -22,6 +22,8 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
         slug: post.slug,
         excerpt: post.excerpt,
         coverImage: post.coverImage,
+        coverAlt: post.coverAlt,
+        seoTitle: post.seoTitle,
         bodyHtml: post.bodyHtml,
         published: !!post.publishedAt,
         sentAt: post.sentAt?.toISOString() ?? null,
