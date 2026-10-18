@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { PostEditor } from "@/components/admin/PostEditor";
+import { openSlots, scheduleLabel } from "@/lib/postSchedule";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
   return (
     <PostEditor
       subscriberCount={subscriberCount}
+      slots={await openSlots(4, post.id)}
       post={{
         id: post.id,
         title: post.title,
@@ -26,6 +28,7 @@ export default async function EditPost({ params }: { params: Promise<{ id: strin
         seoTitle: post.seoTitle,
         bodyHtml: post.bodyHtml,
         published: !!post.publishedAt,
+        scheduledLabel: post.scheduledAt && !post.publishedAt ? scheduleLabel(post.scheduledAt) : null,
         sentAt: post.sentAt?.toISOString() ?? null,
         sentCount: post.sentCount,
       }}

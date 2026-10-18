@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { deletePost, publishPost, savePost, unpublishPost } from "@/app/admin/actions";
+import { deletePost, publishPost, savePost, schedulePost, unpublishPost, unschedulePost } from "@/app/admin/actions";
 import { slugify } from "@/lib/slug";
 import { dataUrlToFile, importDocument } from "./importDoc";
 import { RichEditor } from "./RichEditor";
@@ -19,11 +19,14 @@ type ExistingPost = {
   seoTitle: string;
   bodyHtml: string;
   published: boolean;
+  scheduledLabel: string | null;
   sentAt: string | null;
   sentCount: number;
 };
 
-export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; subscriberCount: number }) {
+type Slot = { iso: string; label: string };
+
+export function PostEditor({ post, subscriberCount, slots = [] }: { post?: ExistingPost; subscriberCount: number; slots?: Slot[] }) {
   const router = useRouter();
   const [id, setId] = useState(post?.id);
   const [title, setTitle] = useState(post?.title ?? "");
@@ -37,6 +40,9 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
   // Bumped to push imported HTML into the editor.
   const [replaceBody, setReplaceBody] = useState<{ html: string; n: number } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [mode, setMode] = useState<"now" | "schedule">("now");
+  const [when, setWhen] = useState(slots[0]?.iso ?? "custom");
+  const [customWhen, setCustomWhen] = useState("");
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -97,6 +103,29 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
       if (!res.ok) setStatus(res.error);
       else if (res.sent > 0) setStatus(`Published and emailed to ${res.sent} subscriber${res.sent === 1 ? "" : "s"}.`);
       else setStatus("Published.");
+      router.refresh();
+    });
+  }
+
+  function onSchedule() {
+    const target = when === "custom" ? customWhen : when;
+    if (!target) { setStatus("Pick a date and time."); return; }
+    startTransition(async () => {
+      setStatus("");
+      const savedId = await save();
+      if (!savedId) return;
+      const res = await schedulePost(savedId, target, sendEmail && !alreadySent);
+      setConfirming(false);
+      setStatus(res.ok ? `Scheduled for ${res.label}.${sendEmail && !alreadySent ? " It will be emailed to subscribers when it goes live." : ""}` : res.error);
+      router.refresh();
+    });
+  }
+
+  function onUnschedule() {
+    if (!id) return;
+    startTransition(async () => {
+      await unschedulePost(id);
+      setStatus("Schedule cancelled. It’s a draft again.");
       router.refresh();
     });
   }
@@ -195,7 +224,12 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
           <Link href="/admin/posts" className="admin-back">&larr; All posts</Link>
           <h1>{post ? "Edit post" : "New post"}</h1>
           <p className="admin-sub">
-            <span className={`pill ${published ? "pill-live" : ""}`}>{published ? "Published" : "Draft"}</span>
+            <span className={`pill ${published ? "pill-live" : post?.scheduledLabel ? "pill-sched" : ""}`}>
+              {published ? "Published" : post?.scheduledLabel ? `Scheduled · ${post.scheduledLabel}` : "Draft"}
+            </span>
+            {!published && post?.scheduledLabel && (
+              <> &middot; <button type="button" className="bk-link" onClick={onUnschedule} disabled={pending}>Cancel schedule</button></>
+            )}
             {alreadySent && <> &middot; emailed to {post?.sentCount} on {new Date(post!.sentAt!).toLocaleDateString()}</>}
             {dirty && <> &middot; unsaved changes</>}
           </p>
@@ -206,7 +240,7 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
           )}
           <button type="button" className="btn-ghost" onClick={onSave} disabled={pending}>Save draft</button>
           <button type="button" className="btn-solid" onClick={() => setConfirming(true)} disabled={pending || !title.trim()}>
-            {published ? "Update / send" : "Publish"}
+            {published ? "Update / send" : post?.scheduledLabel ? "Reschedule / publish" : "Publish…"}
           </button>
         </div>
       </div>
@@ -218,19 +252,46 @@ export function PostEditor({ post, subscriberCount }: { post?: ExistingPost; sub
           <p>
             {published ? "Save changes to the live post" : "Publish this post"} at <code>/minutes/{slugify(slug || title)}</code>.
           </p>
+          {!published && (
+            <div className="when-choice" role="radiogroup" aria-label="When">
+              <label className="check"><input type="radio" checked={mode === "now"} onChange={() => setMode("now")} /> Publish now</label>
+              <label className="check"><input type="radio" checked={mode === "schedule"} onChange={() => setMode("schedule")} /> Schedule it</label>
+              {mode === "schedule" && (
+                <div className="slot-picks">
+                  {slots.map((sl) => (
+                    <button key={sl.iso} type="button" className={`slot${when === sl.iso ? " on" : ""}`} onClick={() => setWhen(sl.iso)}>{sl.label}</button>
+                  ))}
+                  <button type="button" className={`slot${when === "custom" ? " on" : ""}`} onClick={() => setWhen("custom")}>Other time</button>
+                  {when === "custom" && (
+                    <label className="custom-when">
+                      <input type="datetime-local" value={customWhen} onChange={(e) => setCustomWhen(e.target.value)} />
+                      <small>Eastern time</small>
+                    </label>
+                  )}
+                  <p className="muted">The next open Sunday and Wednesday 9 AM slots are listed first; slots another post already holds are skipped.</p>
+                </div>
+              )}
+            </div>
+          )}
           {alreadySent ? (
             <p className="muted">It was already emailed, so it won&rsquo;t be sent again.</p>
           ) : (
             <label className="check">
               <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
-              Email it to {subscriberCount} active subscriber{subscriberCount === 1 ? "" : "s"} now
+              Email it to {subscriberCount} active subscriber{subscriberCount === 1 ? "" : "s"} {mode === "schedule" && !published ? "when it goes live" : "now"}
             </label>
           )}
           <div className="editor-actions">
             <button type="button" className="btn-ghost" onClick={() => setConfirming(false)} disabled={pending}>Cancel</button>
-            <button type="button" className="btn-solid" onClick={onPublish} disabled={pending}>
-              {pending ? "Working…" : sendEmail && !alreadySent && subscriberCount > 0 ? "Publish & send" : published ? "Save live post" : "Publish"}
-            </button>
+            {mode === "schedule" && !published ? (
+              <button type="button" className="btn-solid" onClick={onSchedule} disabled={pending}>
+                {pending ? "Working…" : "Schedule post"}
+              </button>
+            ) : (
+              <button type="button" className="btn-solid" onClick={onPublish} disabled={pending}>
+                {pending ? "Working…" : sendEmail && !alreadySent && subscriberCount > 0 ? "Publish & send" : published ? "Save live post" : "Publish now"}
+              </button>
+            )}
           </div>
         </div>
       )}

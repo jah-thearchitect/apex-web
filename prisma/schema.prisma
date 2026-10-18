@@ -58,6 +58,9 @@ model Post {
   seoTitle    String    @default("")
   bodyHtml    String    @default("")
   publishedAt DateTime?
+  // Set to publish automatically (hourly cron); cleared once it goes live.
+  scheduledAt DateTime?
+  scheduleSendEmail Boolean @default(true)
   sentAt      DateTime?
   sentCount   Int       @default(0)
   createdAt   DateTime  @default(now())

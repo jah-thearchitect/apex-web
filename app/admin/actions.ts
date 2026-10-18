@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { clearFailures, isLocked, recordFailure } from "@/lib/loginRateLimit";
-import { sendPostToSubscribers } from "@/lib/newsletter";
 import { cleanHtml, slugify } from "@/lib/posts";
+import { easternLocalToUtc, publishAndSend, scheduleLabel, type PublishResult } from "@/lib/postSchedule";
 import { prisma } from "@/lib/prisma";
 import { endSession, requireAdmin, startSession } from "@/lib/session";
 
@@ -84,44 +84,41 @@ export async function savePost(input: PostInput): Promise<SaveResult> {
   return { ok: true, id: post.id, slug: post.slug };
 }
 
-export type PublishResult = { ok: true; sent: number; alreadySent: boolean } | { ok: false; error: string };
+export type { PublishResult } from "@/lib/postSchedule";
+
+/** Publish now (and optionally email). Clears any schedule on the post. */
+export async function publishPost(id: string, sendEmail: boolean): Promise<PublishResult> {
+  await requireAdmin();
+  return publishAndSend(id, sendEmail);
+}
+
+export type ScheduleResult = { ok: true; label: string } | { ok: false; error: string };
 
 /**
- * Publishes the post and, if asked, emails it to every active subscriber.
- * The sentAt claim is atomic: a double click or two open tabs can't send
- * the same post twice.
+ * Schedules a draft to publish itself. `when` is a slot's ISO time, or an
+ * Eastern "YYYY-MM-DDTHH:mm" from the date picker.
  */
-export async function publishPost(id: string, sendEmail: boolean): Promise<PublishResult> {
+export async function schedulePost(id: string, when: string, sendEmail: boolean): Promise<ScheduleResult> {
   await requireAdmin();
   const post = await prisma.post.findUnique({ where: { id } });
   if (!post) return { ok: false, error: "Post not found." };
+  if (post.publishedAt) return { ok: false, error: "This post is already live." };
   if (!post.bodyHtml.replace(/<[^>]+>/g, "").trim()) return { ok: false, error: "The post body is empty." };
-
-  const published = post.publishedAt
-    ? post
-    : await prisma.post.update({ where: { id }, data: { publishedAt: new Date() } });
-  revalidatePath("/minutes");
-  revalidatePath(`/minutes/${post.slug}`);
+  const at = /Z$/.test(when) ? new Date(when) : easternLocalToUtc(when);
+  if (!at || Number.isNaN(at.getTime())) return { ok: false, error: "Pick a date and time." };
+  if (at.getTime() < Date.now() + 5 * 60_000) return { ok: false, error: "Pick a time at least a few minutes from now." };
+  if (at.getTime() > Date.now() + 366 * 86_400_000) return { ok: false, error: "Pick a time within the next year." };
+  await prisma.post.update({ where: { id }, data: { scheduledAt: at, scheduleSendEmail: sendEmail } });
   revalidatePath("/admin/posts");
+  revalidatePath(`/admin/posts/${id}`);
+  return { ok: true, label: scheduleLabel(at) };
+}
 
-  if (!sendEmail) return { ok: true, sent: 0, alreadySent: !!post.sentAt };
-
-  const claim = await prisma.post.updateMany({ where: { id, sentAt: null }, data: { sentAt: new Date() } });
-  if (claim.count === 0) return { ok: true, sent: 0, alreadySent: true };
-
-  const result = await sendPostToSubscribers(published);
-  if (result.sent === 0 && result.error) {
-    // Nothing went out, so release the claim and let the admin retry.
-    await prisma.post.update({ where: { id }, data: { sentAt: null } });
-    return { ok: false, error: `The post is published, but the email didn’t go out: ${result.error}` };
-  }
-  // A partial send keeps sentAt set so nobody gets the post twice.
-  await prisma.post.update({ where: { id }, data: { sentCount: result.sent } });
+export async function unschedulePost(id: string) {
+  await requireAdmin();
+  await prisma.post.update({ where: { id }, data: { scheduledAt: null } });
   revalidatePath("/admin/posts");
-  if (result.error) {
-    return { ok: false, error: `Sent to ${result.sent} of ${result.total} subscribers, then stopped: ${result.error}` };
-  }
-  return { ok: true, sent: result.sent, alreadySent: false };
+  revalidatePath(`/admin/posts/${id}`);
 }
 
 export async function unpublishPost(id: string) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatDate } from "@/lib/posts";
+import { scheduleLabel } from "@/lib/postSchedule";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,9 @@ export default async function AdminPosts() {
               <tr key={p.id}>
                 <td><Link href={`/admin/posts/${p.id}`}>{p.title}</Link></td>
                 <td>
-                  <span className={`pill ${p.publishedAt ? "pill-live" : ""}`}>{p.publishedAt ? "Published" : "Draft"}</span>
+                  <span className={`pill ${p.publishedAt ? "pill-live" : p.scheduledAt ? "pill-sched" : ""}`}>
+                    {p.publishedAt ? "Published" : p.scheduledAt ? `Scheduled · ${scheduleLabel(p.scheduledAt)}` : "Draft"}
+                  </span>
                 </td>
                 <td>{p.sentAt ? `${p.sentCount} · ${formatDate(p.sentAt)}` : "—"}</td>
                 <td>{formatDate(p.updatedAt)}</td>
