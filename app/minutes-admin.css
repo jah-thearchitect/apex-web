@@ -318,3 +318,20 @@
 .custom-when input{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); padding: 0.5em 0.7em; font-family: var(--font-mono); color-scheme: dark; }
 .custom-when small{ color: var(--on-ink-faint); font-size: 0.75rem; }
 .post-card.post-featured.no-img{ grid-template-columns: 1fr; }
+
+/* Booking availability editor */
+.avail-row{ display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: start; padding: 6px 0; border-bottom: 1px solid var(--line-ink); }
+.avail-row:last-child{ border-bottom: 0; }
+.avail-day{ padding-top: 6px; }
+.avail-ranges{ display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.avail-range{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--on-ink-soft); }
+.avail-range input[type="time"], .avail-range input[type="date"]{ background: var(--ink); border: 1px solid var(--line-ink); color: var(--on-ink); padding: 0.5em 0.7em; font-family: var(--font-mono); color-scheme: dark; }
+.avail-off{ color: var(--on-ink-faint); font-size: 0.9rem; padding-top: 6px; }
+.avail-warn{ color: #E59A9A; font-size: 0.8rem; font-style: normal; }
+.days-off{ border: 1px solid var(--line-ink); background: var(--ink-2); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.off-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.off-list li{ display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line-ink); padding: 4px 4px 4px 12px; font-family: var(--font-mono); font-size: 0.8rem; color: var(--on-ink); }
+.off-list .line-remove{ font-size: 1.1rem; padding: 0 6px; }
+.earliest-note{ border-left: 2px solid var(--gold); padding: 8px 14px; color: var(--on-ink-soft); background: rgba(180,134,60,0.06); }
+.earliest-note strong{ color: var(--gold-bright); font-weight: 500; }
+@media (max-width: 600px){ .avail-row{ grid-template-columns: 1fr; } }

@@ -308,6 +308,8 @@ model BookingSettings {
   minNoticeHours Int      @default(72)
   windowDays     Int      @default(14)
   weeklyHours    String   @default("{\"0\":[],\"1\":[[\"10:00\",\"13:30\"]],\"2\":[[\"10:00\",\"13:30\"]],\"3\":[[\"10:00\",\"13:30\"]],\"4\":[[\"10:00\",\"13:30\"]],\"5\":[[\"10:00\",\"13:30\"]],\"6\":[[\"14:00\",\"17:30\"]]}")
+  // Dates the firm is unavailable ("YYYY-MM-DD" in the firm's time zone).
+  daysOff        String[] @default([])
   updatedAt      DateTime @updatedAt
 }
 

@@ -48,9 +48,12 @@ export async function availableSlots(): Promise<{ date: string; slots: string[] 
   const len = s.durationMin * 60_000;
   const pad = s.bufferMin * 60_000;
 
+  const daysOff = new Set(s.daysOff);
+
   const candidates: { date: string; start: Date }[] = [];
   for (let i = 0; i <= s.windowDays; i++) {
     const day = addDays(today.y, today.m, today.d, i);
+    if (daysOff.has(ymdKey(day.y, day.m, day.d))) continue;
     for (const [from, to] of weekly[String(day.weekday)] ?? []) {
       const [fh, fm] = hm(from);
       const [th, tm] = hm(to);
