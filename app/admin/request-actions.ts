@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { emailBriefLink, emailRequestQuestion, emailUpdateLink } from "@/lib/briefs";
+import { emailBriefLink, emailRequestDone, emailRequestQuestion, emailUpdateLink } from "@/lib/briefs";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 
@@ -71,6 +71,33 @@ export async function askClient(requestId: string, question: string): Promise<Re
   revalidatePath(`/admin/requests/update/${requestId}`);
   revalidatePath("/admin/requests");
   return { ok: true, message: `Sent to ${req.email}.` };
+}
+
+/**
+ * Marks an update request done. The note (what was done) is added to the
+ * request's thread, and the client is emailed unless `notify` is false.
+ */
+export async function completeRequest(requestId: string, note: string, notify: boolean): Promise<Result> {
+  await requireAdmin();
+  const body = note.trim().slice(0, 4000);
+  const req = await prisma.changeRequest.findUnique({ where: { id: requestId }, include: { client: true } });
+  if (!req) return { ok: false, error: "Request not found." };
+  if (notify) {
+    try {
+      await emailRequestDone(req, req.client, body);
+    } catch (err) {
+      const why = (err instanceof Error ? err.message : "unknown error").replace(/\.$/, "");
+      return { ok: false, error: `Not marked done, because the email didn't send: ${why}. Try again, or untick the email box.` };
+    }
+  }
+  await prisma.$transaction([
+    ...(body ? [prisma.requestMessage.create({ data: { requestId, from: "FIRM", body } })] : []),
+    prisma.changeRequest.update({ where: { id: requestId }, data: { status: "DONE", completedAt: new Date() } }),
+  ]);
+  revalidatePath(`/admin/requests/update/${requestId}`);
+  revalidatePath("/admin/requests");
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: notify ? `Marked done and emailed ${req.email}.` : "Marked done (client not emailed)." };
 }
 
 const STATUSES = ["NEW", "IN_PROGRESS", "WAITING", "DONE"] as const;

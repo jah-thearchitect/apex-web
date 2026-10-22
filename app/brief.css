@@ -128,3 +128,7 @@ textarea.bq-input{ resize: vertical; min-height: 96px; line-height: 1.55; }
 .request-list li{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .request-list li a{ color: var(--accent-bright); flex: 1; min-width: 160px; }
 .request-list li small{ color: var(--on-ink-faint); font-family: var(--font-mono); font-size: 0.72rem; }
+
+.status-box{ display: flex; flex-direction: column; gap: 14px; }
+.done-form{ border: 1px solid var(--gold); background: rgba(180,134,60,0.06); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+.done-form textarea{ background: var(--ink-2); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 0.98rem; padding: 0.8em 1em; width: 100%; resize: vertical; }

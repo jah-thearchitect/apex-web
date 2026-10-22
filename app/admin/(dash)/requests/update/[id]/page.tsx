@@ -45,7 +45,7 @@ export default async function UpdateRequestView({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <RequestStatusPicker key={r.status} id={r.id} status={r.status} />
+      <RequestStatusPicker id={r.id} status={r.status} email={r.email} />
 
       <div className="brief-view">
         <section>

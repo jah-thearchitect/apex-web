@@ -92,6 +92,32 @@ export async function emailRequestQuestion(
   await send(req.email, `Question about your update request: ${req.kind}`, html, text);
 }
 
+/** Tells the client their update request is finished, with the firm's note. Throws on failure. */
+export async function emailRequestDone(
+  req: { id: string; kind: string; name: string; email: string; details: string },
+  client: ClientLite,
+  note: string
+) {
+  const s = await getSettings();
+  const url = requestUrl(client.requestToken, req.id);
+  const original = req.details.length > 300 ? `${req.details.slice(0, 300)}…` : req.details;
+  const noteHtml = note
+    ? `<div style="margin:0 0 18px;padding:14px 18px;border-left:3px solid #B4863C;background:#F6F4EE;font-size:16px;line-height:1.6;color:#101113;">${esc(note).replace(/\n/g, "<br>")}</div>`
+    : "";
+  const html = emailShell(
+    "Your update is done",
+    P(`Hi ${esc(firstName(req.name))},`) +
+      P(`Your update request (<strong>${esc(req.kind)}</strong>) for ${esc(client.businessName)} is complete.`) +
+      (note ? P("Here’s what was done:") + noteHtml : "") +
+      P("Take a look, and if anything isn’t quite right, reply on your request page and we’ll pick it back up.") +
+      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>`,
+    { label: "View your request", url },
+    `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
+  );
+  const text = `Hi ${firstName(req.name)},\n\nYour update request (${req.kind}) for ${client.businessName} is complete.${note ? `\n\nWhat was done:\n${note}` : ""}\n\nIf anything isn't quite right, reply on your request page: ${url}\n\nYour request: ${original}`;
+  await send(req.email, `Done: your update request (${req.kind})`, html, text);
+}
+
 /** "We got it" to whoever submitted a brief or request. Never throws. */
 export async function emailReceived(to: string, name: string, kind: "brief" | "update", client: ClientLite) {
   try {
