@@ -268,7 +268,7 @@ export function PostEditor({ post, subscriberCount, slots = [] }: { post?: Exist
                       <small>Eastern time</small>
                     </label>
                   )}
-                  <p className="muted">The next open Sunday and Wednesday 9 AM slots are listed first; slots another post already holds are skipped.</p>
+                  <p className="muted">The next open Sundays at 9 AM are listed first; Sundays another post already holds are skipped.</p>
                 </div>
               )}
             </div>

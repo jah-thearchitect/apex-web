@@ -4,9 +4,9 @@ import { sendPostToSubscribers } from "./newsletter";
 import { prisma } from "./prisma";
 import { addDays, formatInZone, zonedToUtc, zonedYmd } from "./tz";
 
-// The Minutes publish on Sundays and Wednesdays at 9:00 AM Eastern.
+// The Minutes publish on Sundays at 9:00 AM Eastern.
 export const POST_TZ = "America/New_York";
-const POST_DAYS = [0, 3]; // Sunday, Wednesday
+const POST_DAYS = [0]; // Sunday
 const POST_HOUR = 9;
 
 export type PublishResult = { ok: true; sent: number; alreadySent: boolean } | { ok: false; error: string };
@@ -54,7 +54,7 @@ export function scheduleLabel(date: Date) {
 }
 
 /**
- * The next open Sunday/Wednesday 9 AM slots (skipping ones another
+ * The next open Sunday 9 AM slots (skipping ones another
  * scheduled post already holds), for the quick picks in the editor.
  */
 export async function openSlots(count = 4, exceptPostId?: string) {
