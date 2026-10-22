@@ -132,3 +132,7 @@ textarea.bq-input{ resize: vertical; min-height: 96px; line-height: 1.55; }
 .status-box{ display: flex; flex-direction: column; gap: 14px; }
 .done-form{ border: 1px solid var(--gold); background: rgba(180,134,60,0.06); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
 .done-form textarea{ background: var(--ink-2); border: 1px solid var(--line-ink); color: var(--on-ink); font-family: var(--font-sans); font-size: 0.98rem; padding: 0.8em 1em; width: 100%; resize: vertical; }
+
+.req-nav{ display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.req-nav .btn-ghost{ text-decoration: none; font-size: 0.74rem; padding: 0.75em 1.1em; }
+.new-req-head{ font-size: clamp(1.3rem, 2.6vw, 1.6rem); margin-top: 36px; scroll-margin-top: 110px; }

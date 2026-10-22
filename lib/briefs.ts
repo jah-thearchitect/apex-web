@@ -84,7 +84,8 @@ export async function emailRequestQuestion(
       P(`About your update request (<strong>${esc(req.kind)}</strong>):`) +
       `<div style="margin:0 0 18px;padding:14px 18px;border-left:3px solid #B4863C;background:#F6F4EE;font-size:16px;line-height:1.6;color:#101113;">${asked}</div>` +
       P("Answer with the button below, where you can also attach files. Replying to this email works too.") +
-      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>`,
+      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>` +
+      `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Need something else? <a href="${updateUrl(client.requestToken)}#new" style="color:#2f5f7a;">Send a new request</a>.</p>`,
     { label: "Answer the question", url },
     `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
   );
@@ -110,7 +111,8 @@ export async function emailRequestDone(
       P(`Your update request (<strong>${esc(req.kind)}</strong>) for ${esc(client.businessName)} is complete.`) +
       (note ? P("Here’s what was done:") + noteHtml : "") +
       P("Take a look, and if anything isn’t quite right, reply on your request page and we’ll pick it back up.") +
-      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>`,
+      `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>` +
+      `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Need something else? <a href="${updateUrl(client.requestToken)}#new" style="color:#2f5f7a;">Send a new request</a>.</p>`,
     { label: "View your request", url },
     `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
   );

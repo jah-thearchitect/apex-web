@@ -24,7 +24,10 @@ export default async function RequestThreadPage({ params }: { params: Promise<{ 
       <section className="brief-wrap">
         <div className="brief update">
           <div className="brief-head">
-            <Link href={`/update/${token}`} className="admin-back">&larr; All your requests</Link>
+            <div className="req-nav">
+              <Link href={`/update/${token}`} className="admin-back">&larr; All your requests</Link>
+              <Link href={`/update/${token}#new`} className="btn-ghost">+ Send a new request</Link>
+            </div>
             <p className="eyebrow" style={{ marginTop: 18 }}>UPDATE REQUEST &middot; {r.client.businessName.toUpperCase()}</p>
             <h1>{r.kind}</h1>
             <p className="brief-lede">
@@ -40,6 +43,9 @@ export default async function RequestThreadPage({ params }: { params: Promise<{ 
 
           <RequestThread messages={r.messages} clientName="You" />
           <RequestReplyForm token={token} requestId={r.id} />
+          <p className="update-aside">
+            Something different you need done? <Link href={`/update/${token}#new`}>Send a new request</Link>; you can have more than one open at a time.
+          </p>
         </div>
       </section>
     </PageShell>

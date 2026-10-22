@@ -43,6 +43,7 @@ export default async function UpdateRequestPage({ params }: { params: Promise<{ 
               </ul>
             </div>
           )}
+          <h2 id="new" className="new-req-head">New request</h2>
           <UpdateRequestForm token={token} businessName={c.businessName} defaultName={c.contactName} defaultEmail={c.email} />
         </div>
       </section>
