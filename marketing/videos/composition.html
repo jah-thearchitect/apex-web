@@ -80,9 +80,11 @@ const stage = $("stage");
 stage.style.width = W + "px"; stage.style.height = H + "px";
 
 // Timeline (seconds)
-const T = { hook: [0, 3.2], phone: [3.2, 13.4], laptop: [13.4, 22.6], built: [22.6, 26.2], end: [26.2, 30] };
+const T = { hook: [0, 4.2], phone: [4.2, 13.4], laptop: [13.4, 22.2], built: [22.2, 26.9], end: [26.9, 35] };
 const FADE = 0.45;
-window.DURATION = 30;
+window.DURATION = 35;
+// When each voiceover line starts (vo/<client>-1..4.mp3, then the shared vo/end.mp3).
+window.VO_CUES = [T.hook[0] + 0.2, T.phone[0] + 0.4, T.laptop[0] + 0.3, T.built[0] + 0.2, T.end[0] + 0.3];
 
 // ---------- layout (two formats) ----------
 const L = TALL ? {

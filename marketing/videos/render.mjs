@@ -3,6 +3,8 @@
 //   node render.mjs stills            key frames as PNGs (for review)
 //   node render.mjs [alss|nolas]       MP4s (9:16 and 4:5)
 //   node render.mjs nolas --music path/to/track.mp3
+// Voiceover lines in vo/ (<client>-1..4.mp3 + end.mp3) are mixed in when
+// present; --no-vo renders without them. Music sits under the voice.
 import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -23,6 +25,33 @@ const only = CLIENTS.includes(args[0]) ? args[0] : null;
 const musicIdx = args.indexOf("--music");
 const music = musicIdx >= 0 ? resolve(args[musicIdx + 1]) : null;
 if (music && !existsSync(music)) throw new Error(`No music file at ${music}`);
+const noVo = args.includes("--no-vo");
+
+function voFiles(client) {
+  const files = [1, 2, 3, 4].map((n) => join(DIR, "vo", `${client}-${n}.mp3`)).concat(join(DIR, "vo", "end.mp3"));
+  return !noVo && files.every((f) => existsSync(f)) ? files : null;
+}
+
+// ffmpeg args for the audio: each voice line delayed to its cue, music ducked under it.
+function audioArgs(vo, cues, duration) {
+  if (!vo && !music) return [];
+  const inputs = [], parts = [], mix = [];
+  let n = 1;
+  for (const [i, f] of (vo || []).entries()) {
+    inputs.push("-i", f);
+    const ms = Math.round(cues[i] * 1000);
+    parts.push(`[${n}:a]adelay=${ms}:all=1[v${i}]`);
+    mix.push(`[v${i}]`);
+    n++;
+  }
+  if (music) {
+    inputs.push("-i", music);
+    parts.push(`[${n}:a]volume=${vo ? 0.18 : 1},afade=t=out:st=${duration - 2}:d=2[m]`);
+    mix.push("[m]");
+  }
+  parts.push(`${mix.join("")}amix=inputs=${mix.length}:normalize=0:duration=longest,apad,atrim=0:${duration},loudnorm=I=-16:TP=-1.5[a]`);
+  return [...inputs, "-filter_complex", parts.join(";"), "-map", "0:v", "-map", "[a]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000"];
+}
 
 mkdirSync(OUT, { recursive: true });
 const browser = await puppeteer.launch({
@@ -46,7 +75,7 @@ try {
     for (const fmt of Object.keys(FORMATS)) {
       const page = await open(client, fmt);
       if (stills) {
-        for (const t of [1.6, 6.5, 11, 17, 21.5, 24.5, 28.5]) {
+        for (const t of [2, 8, 12, 17, 21, 24.5, 31]) {
           await page.evaluate((s) => window.seek(s), t);
           await page.screenshot({ path: join(OUT, `still-${client}-${fmt}-${String(t).replace(".", "_")}.png`) });
         }
@@ -55,11 +84,11 @@ try {
         continue;
       }
 
-      const duration = await page.evaluate(() => window.DURATION);
+      const [duration, cues] = await page.evaluate(() => [window.DURATION, window.VO_CUES]);
       const file = join(OUT, `apex-spotlight-${client}-${fmt === "916" ? "9x16" : "4x5"}.mp4`);
       const ff = spawn(ffmpeg, [
         "-y", "-f", "image2pipe", "-framerate", String(FPS), "-i", "-",
-        ...(music ? ["-i", music, "-map", "0:v", "-map", "1:a", "-c:a", "aac", "-b:a", "192k", "-af", `afade=t=out:st=${duration - 2}:d=2`, "-shortest"] : []),
+        ...audioArgs(voFiles(client), cues, duration),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-preset", "medium", "-movflags", "+faststart",
         file,
       ], { stdio: ["pipe", "ignore", "pipe"] });
