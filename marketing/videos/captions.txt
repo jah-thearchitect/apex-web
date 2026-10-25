@@ -1,6 +1,6 @@
 APEX BUILD SPOTLIGHTS: FACEBOOK CAPTIONS
 Post the 9x16 file as a Reel (or Story) and the 4x5 file in the feed.
-Videos have a voiceover (ElevenLabs, voice "Everett"). If you add Facebook music, keep it low under the voice.
+Videos have a voiceover (ElevenLabs, voice "Sia"). If you add Facebook music, keep it low under the voice.
 
 ============================================================
 ALSS: apex-spotlight-alss-9x16.mp4 / apex-spotlight-alss-4x5.mp4
