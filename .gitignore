@@ -8,3 +8,9 @@ out
 next-env.d.ts
 generated
 apex-logo-kit.zip
+
+# Video toolkit (own package) and render scratch
+marketing/videos/node_modules/
+marketing/videos/frames/
+marketing/videos/out/
+marketing/videos/captures/

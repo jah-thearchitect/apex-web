@@ -1,0 +1,30 @@
+// Build Spotlight content: one entry per client. Callouts describe real,
+// public features of each live site. Loaded by composition.html.
+window.SPOTS = {
+  alss: {
+    eyebrow: "BUILD SPOTLIGHT",
+    hook: "A nonprofit that runs on a <em>platform</em>, not paperwork.",
+    phoneLine: "Families apply and check in from their <em>phone</em>.",
+    laptopLine: "Every service, every form, in <em>one place</em>.",
+    phone: "captures/alss-home-mobile.png",
+    laptop: "captures/alss-services-desktop.png",
+    phoneCallouts: ["Quick eligibility check", "Client portal: referrals, messages, appointments", "Staff portal: caseload and progress notes"],
+    laptopCallouts: ["Housing, health, financial, and workforce services", "Online enrollment, no paperwork"],
+    logo: "../../public/images/builds/alss.webp",
+    builtFor: "Affordable Living &amp; Supportive Services",
+    domain: "affordablelivingservices.org",
+  },
+  nolas: {
+    eyebrow: "BUILD SPOTLIGHT",
+    hook: "A bakery that takes <em>orders</em> while she bakes.",
+    phoneLine: "Customers browse, order, and pay from their <em>phone</em>.",
+    laptopLine: "Her full menu, ready to order on <em>any screen</em>.",
+    phone: "captures/nolas-home-mobile.png",
+    laptop: "captures/nolas-menu-desktop.png",
+    phoneCallouts: ["Full menu with prices", "Order and pay online", "Reviews and email sign-up"],
+    laptopCallouts: ["Catering requests for events", "Owner dashboard for orders and dates"],
+    logo: "../../public/images/builds/nolas-creationz.webp",
+    builtFor: "Nola&rsquo;s Creationz",
+    domain: "nolascreationz.com",
+  },
+};

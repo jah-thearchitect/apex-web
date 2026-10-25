@@ -1,0 +1,256 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Build Spotlight composition. ?client=alss|nolas&fmt=916|45
+     render.mjs calls window.seek(seconds) for each frame; nothing animates on its own. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,500&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0A0B0D;overflow:hidden}
+body{font-family:Manrope,Arial,sans-serif;color:#EDEEEC;-webkit-font-smoothing:antialiased}
+#stage{position:relative;overflow:hidden;background:#0A0B0D}
+.scene{position:absolute;inset:0;opacity:0}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 45% at 50% 42%,rgba(180,134,60,.16),rgba(10,11,13,0) 70%)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;letter-spacing:.22em;color:#D8B268;text-transform:uppercase;display:flex;align-items:center;gap:18px}
+.eyebrow::before{content:"";width:46px;height:2px;background:#B4863C}
+h1{font-family:Newsreader,Georgia,serif;font-weight:500;line-height:1.05;letter-spacing:-.01em}
+h1 em{font-style:italic;color:#D8B268}
+.brand{display:flex;align-items:center;gap:16px}
+.box{border:1.5px solid #B4863C;padding:8px 18px;font-family:Newsreader,Georgia,serif;color:#EDEEEC}
+/* devices */
+.phone{position:absolute;border-radius:58px;background:#16181c;box-shadow:0 0 0 2px #2a2d33,0 40px 90px rgba(0,0,0,.6)}
+.phone .screen{position:absolute;overflow:hidden;border-radius:44px;background:#fff}
+.phone .notch{position:absolute;left:50%;transform:translateX(-50%);background:#16181c;border-radius:0 0 20px 20px;z-index:2}
+.laptop .lid{position:absolute;border-radius:22px;background:#16181c;box-shadow:0 0 0 2px #2a2d33,0 40px 90px rgba(0,0,0,.6)}
+.laptop .screen{position:absolute;overflow:hidden;border-radius:6px;background:#fff}
+.laptop .base{position:absolute;border-radius:0 0 26px 26px;background:linear-gradient(#2a2d33,#16181c)}
+.screen img{position:absolute;left:0;top:0;width:100%;display:block}
+/* callouts */
+.callout{position:absolute;background:rgba(19,21,25,.94);border:1px solid rgba(237,238,236,.14);border-left:4px solid #B4863C;color:#EDEEEC;font-weight:500;line-height:1.3;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.callout::before{content:"\2713";color:#D8B268;font-weight:700;margin-right:14px}
+.tile{background:#fff;display:flex;align-items:center;justify-content:center}
+.tile img{max-width:80%;max-height:78%;object-fit:contain}
+.cta{background:#EDEEEC;color:#0A0B0D;font-family:"IBM Plex Mono",monospace;letter-spacing:.05em}
+.url{font-family:"IBM Plex Mono",monospace;color:#D8B268;letter-spacing:.06em}
+.tagline{font-family:Newsreader,Georgia,serif;color:#EDEEEC}
+.sub{color:#9CA0A0}
+.scene-cap{position:absolute;left:0;right:0;text-align:center;font-family:Newsreader,Georgia,serif;font-weight:500;line-height:1.12;color:#EDEEEC}
+.scene-cap em{font-style:italic;color:#D8B268}
+</style>
+</head><body>
+<div id="stage">
+  <div class="glow"></div>
+
+  <section class="scene" id="hook"><div id="hookInner" style="position:absolute;left:0;right:0"><p class="eyebrow" id="eyebrow"></p><h1 id="hookText"></h1></div></section>
+
+  <section class="scene" id="phoneScene">
+    <p class="scene-cap" id="phoneCap"></p>
+    <div class="phone" id="phone"><div class="notch" id="notch"></div><div class="screen" id="phoneScreen"><img id="phoneImg" alt=""></div></div>
+  </section>
+
+  <section class="scene" id="laptopScene">
+    <p class="scene-cap" id="lapCap"></p>
+    <div class="laptop"><div class="lid" id="lid"><div class="screen" id="lapScreen"><img id="lapImg" alt=""></div></div><div class="base" id="base"></div></div>
+  </section>
+
+  <section class="scene" id="builtScene"><div id="builtInner" style="position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;text-align:center">
+    <p class="eyebrow" id="builtEyebrow">BUILT BY APEX FOR</p>
+    <div class="tile" id="logoTile"><img id="logo" alt=""></div>
+    <h1 id="builtFor"></h1>
+    <p class="url" id="domain"></p>
+  </div></section>
+
+  <section class="scene" id="endScene"><div id="endInner" style="position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;text-align:center">
+    <div class="brand"><span class="box" id="endBox">Apex</span><img id="endMark" src="../../public/brand/apex-mark-dark.png" alt=""></div>
+    <p class="tagline" id="endTag">We build brands that make <em style="font-style:italic;color:#D8B268">money</em>.</p>
+    <p class="sub" id="endSub">Websites are pages. We build platforms that bring you customers.</p>
+    <span class="cta" id="endCta">Book a consultation &rarr;</span>
+    <p class="url" id="endUrl">acc-funds.com</p>
+  </div></section>
+</div>
+
+<script src="spots.js"></script>
+<script>
+const q = new URLSearchParams(location.search);
+const S = window.SPOTS[q.get("client") || "alss"];
+const TALL = (q.get("fmt") || "916") === "916";
+const W = 1080, H = TALL ? 1920 : 1350;
+const $ = (id) => document.getElementById(id);
+const stage = $("stage");
+stage.style.width = W + "px"; stage.style.height = H + "px";
+
+// Timeline (seconds)
+const T = { hook: [0, 3.2], phone: [3.2, 13.4], laptop: [13.4, 22.6], built: [22.6, 26.2], end: [26.2, 30] };
+const FADE = 0.45;
+window.DURATION = 30;
+
+// ---------- layout (two formats) ----------
+const L = TALL ? {
+  hookX: 90, hookTop: 640, eyebrowSize: 26, hookSize: 104,
+  phoneW: 540, phoneH: 1110, phoneX: (W - 540) / 2, phoneY: 360,
+  lapW: 980, lapX: 50, lapY: 520,
+  calloutSize: 30, calloutW: 470,
+  tileW: 560, tileH: 340, builtSize: 66,
+  endTop: 560,
+} : {
+  hookX: 80, hookTop: 420, eyebrowSize: 22, hookSize: 86,
+  phoneW: 390, phoneH: 800, phoneX: 120, phoneY: 275,
+  lapW: 900, lapX: 90, lapY: 290,
+  calloutSize: 25, calloutW: 420,
+  tileW: 460, tileH: 280, builtSize: 54,
+  endTop: 330,
+};
+
+// Hook
+$("eyebrow").textContent = S.eyebrow;
+$("eyebrow").style.fontSize = L.eyebrowSize + "px";
+$("hookText").innerHTML = S.hook;
+$("hookText").style.fontSize = L.hookSize + "px";
+$("hookText").style.marginTop = "28px";
+$("hookInner").style.padding = `0 ${L.hookX}px`;
+$("hookInner").style.top = L.hookTop + "px";
+
+// Phone
+const ph = $("phone"), bez = Math.round(L.phoneW * 0.032);
+Object.assign(ph.style, { width: L.phoneW + "px", height: L.phoneH + "px", left: L.phoneX + "px", top: L.phoneY + "px" });
+Object.assign($("phoneScreen").style, { left: bez + "px", top: bez + "px", right: bez + "px", bottom: bez + "px" });
+Object.assign($("notch").style, { width: L.phoneW * 0.34 + "px", height: L.phoneW * 0.055 + "px", top: bez + "px" });
+$("phoneImg").src = S.phone;
+
+// Laptop (16:10 screen)
+const lapH = L.lapW * 0.64, lb = Math.round(L.lapW * 0.022);
+Object.assign($("lid").style, { width: L.lapW + "px", height: lapH + "px", left: L.lapX + "px", top: L.lapY + "px" });
+Object.assign($("lapScreen").style, { left: lb + "px", top: lb + "px", right: lb + "px", bottom: lb + "px" });
+Object.assign($("base").style, { width: L.lapW * 1.12 + "px", height: L.lapW * 0.035 + "px", left: L.lapX - L.lapW * 0.06 + "px", top: L.lapY + lapH + "px" });
+$("lapImg").src = S.laptop;
+
+// Callouts: phone ones alternate sides around the phone; laptop ones sit below/above the laptop.
+function makeCallouts(list, scene, tag) {
+  return list.map((text, i) => {
+    const el = document.createElement("div");
+    el.className = "callout";
+    el.innerHTML = text;
+    el.style.fontSize = L.calloutSize + "px";
+    el.style.padding = `${L.calloutSize * 0.7}px ${L.calloutSize * 0.9}px`;
+    el.style.width = L.calloutW + "px";
+    $(scene).appendChild(el);
+    return { el, i, tag };
+  });
+}
+const pCalls = makeCallouts(S.phoneCallouts, "phoneScene", "p");
+const lCalls = makeCallouts(S.laptopCallouts, "laptopScene", "l");
+
+function placePhoneCallout(c, k) {
+  if (TALL) {
+    // Over the lower part of the phone, alternating left/right overhang.
+    const y = L.phoneY + L.phoneH * (0.38 + c.i * 0.2);
+    const left = c.i % 2 === 0 ? 40 : W - 40 - L.calloutW;
+    return { left, top: y };
+  }
+  // 4:5: stacked to the right of the phone.
+  return { left: L.phoneX + L.phoneW + 50, top: L.phoneY + 120 + c.i * 190 };
+}
+function placeLaptopCallout(c) {
+  const gap = TALL ? 60 : 40;
+  const top = L.lapY + lapH + L.lapW * 0.035 + gap + c.i * (TALL ? 150 : 0);
+  if (TALL) return { left: (W - L.calloutW * 1.6) / 2, top, width: L.calloutW * 1.6 };
+  return { left: L.lapX + c.i * (L.lapW / 2 + 10), top, width: L.lapW / 2 - 10 };
+}
+
+// Scene headlines over the devices.
+for (const [id, html] of [["phoneCap", S.phoneLine], ["lapCap", S.laptopLine]]) {
+  $(id).innerHTML = html;
+  Object.assign($(id).style, { fontSize: (TALL ? 50 : 40) + "px", top: (TALL ? 150 : 110) + "px", padding: TALL ? "0 90px" : "0 120px" });
+}
+
+// Built-for
+$("builtEyebrow").style.fontSize = L.eyebrowSize + "px";
+Object.assign($("logoTile").style, { width: L.tileW + "px", height: L.tileH + "px", margin: "34px 0 36px" });
+$("logo").src = S.logo;
+$("builtFor").innerHTML = S.builtFor;
+Object.assign($("builtFor").style, { fontSize: L.builtSize + "px", padding: "0 80px" });
+$("domain").textContent = S.domain;
+$("domain").style.fontSize = L.eyebrowSize + 2 + "px";
+$("domain").style.marginTop = "22px";
+$("builtInner").style.top = (TALL ? 560 : 300) + "px";
+
+// End card
+$("endInner").style.top = L.endTop + "px";
+$("endBox").style.fontSize = (TALL ? 48 : 40) + "px";
+$("endMark").style.height = (TALL ? 64 : 54) + "px";
+Object.assign($("endTag").style, { fontSize: (TALL ? 84 : 66) + "px", marginTop: "56px", lineHeight: "1.05", padding: "0 70px" });
+Object.assign($("endSub").style, { fontSize: (TALL ? 34 : 28) + "px", marginTop: "30px", padding: "0 110px", lineHeight: "1.4" });
+Object.assign($("endCta").style, { fontSize: (TALL ? 34 : 28) + "px", padding: TALL ? "28px 44px" : "22px 36px", marginTop: "60px" });
+Object.assign($("endUrl").style, { fontSize: (TALL ? 34 : 28) + "px", marginTop: "34px" });
+
+// ---------- animation ----------
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const ease = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const out = (x) => 1 - Math.pow(1 - clamp(x), 3);
+function sceneAlpha(t, [a, b]) {
+  if (t < a || t > b + FADE) return 0;
+  return Math.min(clamp((t - a) / FADE), 1 - clamp((t - b) / FADE));
+}
+
+window.seek = function (t) {
+  for (const [id, span] of [["hook", T.hook], ["phoneScene", T.phone], ["laptopScene", T.laptop], ["builtScene", T.built], ["endScene", T.end]]) {
+    $(id).style.opacity = span === T.end ? clamp((t - span[0]) / FADE) : sceneAlpha(t, span);
+  }
+
+  // Hook: text rises in.
+  const hk = out((t - 0.15) / 0.9);
+  $("hookInner").style.transform = `translateY(${(1 - hk) * 40}px)`;
+  $("hookInner").style.opacity = hk;
+
+  // Phone: rises in, then scrolls the page.
+  const p0 = T.phone[0], p1 = T.phone[1];
+  const rise = out((t - p0) / 0.8);
+  $("phone").style.transform = `translateY(${(1 - rise) * 120}px)`;
+  const pImg = $("phoneImg"), pScreenH = $("phoneScreen").clientHeight;
+  const pMax = Math.max(0, pImg.clientHeight - pScreenH);
+  pImg.style.transform = `translateY(${-ease((t - p0 - 0.8) / (p1 - p0 - 1.4)) * Math.min(pMax * 0.88, pScreenH * 3)}px)`;
+  for (const c of pCalls) {
+    const start = p0 + 1.6 + c.i * 2.3;
+    const k = out((t - start) / 0.55);
+    const pos = placePhoneCallout(c, k);
+    const dir = TALL ? (c.i % 2 === 0 ? -1 : 1) : 1;
+    Object.assign(c.el.style, { left: pos.left + "px", top: pos.top + "px", opacity: k, transform: `translateX(${(1 - k) * 60 * dir}px)` });
+  }
+
+  $("phoneCap").style.opacity = out((t - p0 - 0.3) / 0.7);
+  $("phoneCap").style.transform = `translateY(${(1 - out((t - p0 - 0.3) / 0.7)) * 24}px)`;
+
+  // Laptop: rises in, then scrolls.
+  const l0 = T.laptop[0], l1 = T.laptop[1];
+  const lr = out((t - l0) / 0.8);
+  document.querySelector(".laptop").style.transform = `translateY(${(1 - lr) * 120}px)`;
+  const lImg = $("lapImg"), lScreenH = $("lapScreen").clientHeight;
+  const lMax = Math.max(0, lImg.clientHeight - lScreenH);
+  lImg.style.transform = `translateY(${-ease((t - l0 - 0.8) / (l1 - l0 - 1.4)) * Math.min(lMax * 0.85, lScreenH * 1.8)}px)`;
+  $("lapCap").style.opacity = out((t - l0 - 0.3) / 0.7);
+  $("lapCap").style.transform = `translateY(${(1 - out((t - l0 - 0.3) / 0.7)) * 24}px)`;
+  for (const c of lCalls) {
+    const k = out((t - (l0 + 1.6 + c.i * 2.4)) / 0.55);
+    const pos = placeLaptopCallout(c);
+    Object.assign(c.el.style, { left: pos.left + "px", top: pos.top + "px", width: pos.width + "px", opacity: k, transform: `translateY(${(1 - k) * 40}px)` });
+  }
+
+  // Built-for: logo tile scales in.
+  const bk = out((t - T.built[0] - 0.1) / 0.7);
+  $("builtInner").style.transform = `scale(${0.94 + bk * 0.06})`;
+  $("builtInner").style.opacity = bk;
+
+  // End card: rises in, CTA last.
+  const ek = out((t - T.end[0]) / 0.8);
+  $("endInner").style.transform = `translateY(${(1 - ek) * 40}px)`;
+  $("endCta").style.opacity = out((t - T.end[0] - 0.6) / 0.6);
+  $("endUrl").style.opacity = out((t - T.end[0] - 0.9) / 0.6);
+};
+
+// Ready when fonts and every image are loaded.
+window.READY = Promise.all([
+  document.fonts.ready,
+  ...[...document.images].map((im) => im.complete ? Promise.resolve() : new Promise((r) => { im.onload = r; im.onerror = r; })),
+]).then(() => { window.seek(0); return true; });
+</script>
+</body></html>
