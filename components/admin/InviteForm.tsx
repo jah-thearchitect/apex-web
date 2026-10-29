@@ -26,7 +26,10 @@ export function InviteForm({
     lastName: initial?.lastName ?? "",
     businessName: initial?.businessName ?? "",
   });
-  const [when, setWhen] = useState({ date: "", time: "" });
+  // Every field is controlled: React resets uncontrolled fields after a
+  // form action, which would wipe them when a clash warning comes back.
+  const [when, setWhen] = useState({ date: "", time: "", durationMin: String(durationMin) });
+  const [about, setAbout] = useState({ topic: "", note: "" });
 
   // Picking a known client or contact by email fills in the rest.
   function onEmail(email: string) {
@@ -59,7 +62,7 @@ export function InviteForm({
                 type="button"
                 key={s.date + s.time}
                 className={`slot${when.date === s.date && when.time === s.time ? " on" : ""}`}
-                onClick={() => setWhen({ date: s.date, time: s.time })}
+                onClick={() => setWhen({ ...when, date: s.date, time: s.time })}
               >
                 {s.label}
               </button>
@@ -70,7 +73,7 @@ export function InviteForm({
         <div className="avail-range">
           <input type="date" name="date" required value={when.date} onChange={(e) => setWhen({ ...when, date: e.target.value })} />
           <input type="time" name="time" required value={when.time} onChange={(e) => setWhen({ ...when, time: e.target.value })} />
-          <select name="durationMin" defaultValue={String(durationMin)} className="slot" style={{ padding: ".5em .7em" }}>
+          <select name="durationMin" value={when.durationMin} onChange={(e) => setWhen({ ...when, durationMin: e.target.value })} className="slot" style={{ padding: ".5em .7em" }}>
             {[...new Set([15, 30, 45, 60, 90, 120, durationMin])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{m} min</option>)}
           </select>
         </div>
@@ -78,11 +81,11 @@ export function InviteForm({
 
       <label className="field">
         <span>What the call is about <small>shown to the client</small></span>
-        <textarea name="topic" rows={3} required maxLength={3000} placeholder="e.g. Walk through the new client portal before launch" />
+        <textarea name="topic" rows={3} required maxLength={3000} value={about.topic} onChange={(e) => setAbout({ ...about, topic: e.target.value })} placeholder="e.g. Walk through the new client portal before launch" />
       </label>
       <label className="field">
         <span>Personal note <small>optional, added to the email</small></span>
-        <textarea name="note" rows={3} maxLength={2000} />
+        <textarea name="note" rows={3} maxLength={2000} value={about.note} onChange={(e) => setAbout({ ...about, note: e.target.value })} />
       </label>
 
       {state.error && <p className="editor-status" style={{ color: "#e59a9a" }}>{state.error}</p>}
