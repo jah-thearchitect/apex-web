@@ -325,7 +325,10 @@ model GoogleConnection {
 }
 
 enum BookingStatus {
+  // Apex invited the client; waiting on them to accept or decline.
+  PENDING
   CONFIRMED
+  DECLINED
   CANCELLED
 }
 
@@ -350,6 +353,12 @@ model Booking {
   meetLink       String?
   reminderSentAt DateTime?
   cancelledAt    DateTime?
+  // Set when Apex started the call from the admin (an invite) rather than
+  // the client booking it; the client then accepts or declines.
+  invitedAt      DateTime?
+  inviteNote     String?
+  respondedAt    DateTime?
+  declineReason  String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

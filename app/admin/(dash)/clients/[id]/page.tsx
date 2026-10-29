@@ -44,6 +44,7 @@ export default async function ClientDetail({ params }: { params: Promise<{ id: s
           </p>
         </div>
         <div className="editor-actions">
+          <Link className="btn-ghost" href={`/admin/bookings/new?client=${c.id}`}>Set up a call</Link>
           <Link className="btn-ghost" href={`/admin/quotes/new?client=${c.id}`}>New quote</Link>
           <Link className="btn-solid" href={`/admin/invoices/new?client=${c.id}`}>New invoice</Link>
         </div>

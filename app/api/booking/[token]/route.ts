@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { cancelBooking, rescheduleBooking } from "@/lib/booking";
+import { cancelBooking, rescheduleBooking, respondToInvite } from "@/lib/booking";
 
-// Client-side manage actions from /booking/<token>: cancel or move.
+// Client-side manage actions from /booking/<token>: cancel or move, and
+// accept or decline when Apex sent the invite.
 export async function POST(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const body = (await req.json().catch(() => ({}))) as { action?: string; start?: string };
+  const body = (await req.json().catch(() => ({}))) as { action?: string; start?: string; reason?: string };
+  if (body.action === "accept" || body.action === "decline") {
+    const r = await respondToInvite(token, body.action, typeof body.reason === "string" ? body.reason : "");
+    return NextResponse.json(r, { status: r.ok ? 200 : 400 });
+  }
   if (body.action === "cancel") {
     const r = await cancelBooking(token);
     return NextResponse.json(r, { status: r.ok ? 200 : 400 });

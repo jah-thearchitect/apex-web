@@ -69,7 +69,7 @@ export async function availableSlots(): Promise<{ date: string; slots: string[] 
   const rangeFrom = candidates[0].start;
   const rangeTo = new Date(candidates[candidates.length - 1].start.getTime() + len + pad);
   const [booked, busy] = await Promise.all([
-    prisma.booking.findMany({ where: { status: "CONFIRMED", startAt: { lt: rangeTo }, endAt: { gt: rangeFrom } }, select: { startAt: true, endAt: true } }),
+    prisma.booking.findMany({ where: { status: { in: ["CONFIRMED", "PENDING"] }, startAt: { lt: rangeTo }, endAt: { gt: rangeFrom } }, select: { startAt: true, endAt: true } }),
     busyTimes(rangeFrom, rangeTo).catch((err) => {
       console.error("Google free/busy failed:", err);
       return null;
@@ -182,6 +182,137 @@ export async function createBooking(input: BookingInput): Promise<{ ok: true; bo
   return { ok: true, booking };
 }
 
+export type InviteInput = {
+  start: Date;
+  durationMin: number;
+  firstName: string;
+  lastName?: string;
+  email: string;
+  businessName?: string;
+  topic: string;
+  note?: string;
+};
+
+/**
+ * What a call at this time would overlap: other Apex calls and busy blocks
+ * on the connected Google calendar (padded by the buffer). Empty when clear.
+ */
+export async function conflictsFor(start: Date, end: Date): Promise<string[]> {
+  const s = await getBookingSettings();
+  const pad = s.bufferMin * 60_000;
+  const from = new Date(start.getTime() - pad);
+  const to = new Date(end.getTime() + pad);
+  const [booked, busy] = await Promise.all([
+    prisma.booking.findMany({ where: { status: { in: ["CONFIRMED", "PENDING"] }, startAt: { lt: to }, endAt: { gt: from } } }),
+    busyTimes(from, to).catch(() => null),
+  ]);
+  const out = booked.map((b) => `${b.status === "PENDING" ? "Invite sent to" : "Call with"} ${b.firstName}${b.lastName ? ` ${b.lastName}` : ""} at ${longDateTime(b.startAt, s.timezone)}`);
+  if (busy === null) out.push("Couldn't check your Google calendar");
+  else {
+    // Busy blocks include Apex's own call events, already listed above.
+    const own = new Set(booked.map((b) => b.startAt.getTime()));
+    for (const x of busy) if (!own.has(x.start.getTime())) out.push(`Busy on your Google calendar ${longDateTime(x.start, s.timezone)}`);
+  }
+  return out;
+}
+
+/**
+ * Apex starts a call: holds the time on the calendar (with a Meet link) and
+ * emails the client an invite they accept or decline from /booking/<token>.
+ */
+export async function inviteBooking(input: InviteInput): Promise<{ ok: true; booking: Booking } | { ok: false; error: string }> {
+  const s = await getBookingSettings();
+  if (!(await getConnection())) return { ok: false, error: "Connect Google Calendar in Settings first, so the call gets a Meet link." };
+  const start = input.start;
+  const end = new Date(start.getTime() + input.durationMin * 60_000);
+  const name = [input.firstName, input.lastName].filter(Boolean).join(" ");
+
+  let booking: Booking;
+  try {
+    booking = await prisma.booking.create({
+      data: {
+        status: "PENDING",
+        slotKey: start.toISOString(),
+        startAt: start,
+        endAt: end,
+        firstName: input.firstName,
+        lastName: input.lastName || null,
+        email: input.email,
+        businessName: input.businessName || null,
+        topic: input.topic,
+        inviteNote: input.note || null,
+        invitedAt: new Date(),
+      },
+    });
+  } catch {
+    return { ok: false, error: "Another call already starts at that exact time." };
+  }
+
+  try {
+    const ev = await createEvent({
+      summary: `${s.title}: ${name}${input.businessName ? ` (${input.businessName})` : ""}`,
+      description: [
+        `${name} · ${input.email}`,
+        input.businessName ? `Business: ${input.businessName}` : "",
+        "",
+        "Invited by Apex. About:",
+        input.topic,
+        "",
+        `Client's link: ${manageUrl(booking.token)}`,
+      ].join("\n"),
+      start,
+      end,
+      timeZone: s.timezone,
+      attendee: { email: input.email, name },
+      requestId: randomUUID(),
+    });
+    booking = await prisma.booking.update({ where: { id: booking.id }, data: { googleEventId: ev.id, meetLink: ev.meetLink } });
+  } catch (err) {
+    console.error("Google event create failed:", err);
+    await prisma.booking.delete({ where: { id: booking.id } });
+    return { ok: false, error: "Couldn't reach Google Calendar to hold that time. Try again in a moment." };
+  }
+
+  const contactId = await recordContact({ email: input.email, firstName: input.firstName, lastName: input.lastName, source: "booking" }).catch(() => null);
+  if (contactId) booking = await prisma.booking.update({ where: { id: booking.id }, data: { contactId } });
+
+  await sendBookingEmail(booking, s, "invite");
+  return { ok: true, booking };
+}
+
+/** The client's answer to an invite. */
+export async function respondToInvite(token: string, answer: "accept" | "decline", reason?: string): Promise<{ ok: boolean; error?: string }> {
+  const b = await prisma.booking.findUnique({ where: { token } });
+  if (!b) return { ok: false, error: "Invite not found." };
+  if (b.status !== "PENDING") return { ok: false, error: "This invite was already answered." };
+  if (b.startAt.getTime() < Date.now()) return { ok: false, error: "This invite has expired." };
+  const s = await getBookingSettings();
+  const name = `${b.firstName}${b.lastName ? ` ${b.lastName}` : ""}`;
+  const when = longDateTime(b.startAt, s.timezone);
+
+  if (answer === "accept") {
+    const updated = await prisma.booking.update({ where: { id: b.id }, data: { status: "CONFIRMED", respondedAt: new Date() } });
+    await sendBookingEmail(updated, s, "confirmed");
+    await notifyFirm(`Accepted: ${s.title} with ${name}`, [
+      `${name} accepted the ${when} call.`,
+      b.meetLink ? `Meet: ${b.meetLink}` : "",
+    ]);
+    return { ok: true };
+  }
+
+  if (b.googleEventId) await deleteEvent(b.googleEventId).catch((err) => console.error("Google event delete failed:", err));
+  const note = (reason ?? "").trim().slice(0, 1000);
+  await prisma.booking.update({
+    where: { id: b.id },
+    data: { status: "DECLINED", respondedAt: new Date(), slotKey: null, declineReason: note || null },
+  });
+  await notifyFirm(`Declined: ${s.title} with ${name}`, [
+    `${name} declined the ${when} call.`,
+    note ? `\nTheir note:\n${note}` : "They didn't leave a note.",
+  ]);
+  return { ok: true };
+}
+
 export async function cancelBooking(token: string): Promise<{ ok: boolean; error?: string }> {
   const b = await prisma.booking.findUnique({ where: { token } });
   if (!b) return { ok: false, error: "Booking not found." };
@@ -201,14 +332,18 @@ export async function cancelBooking(token: string): Promise<{ ok: boolean; error
 
 export async function rescheduleBooking(token: string, newStartIso: string): Promise<{ ok: boolean; error?: string }> {
   const b = await prisma.booking.findUnique({ where: { token } });
-  if (!b || b.status !== "CONFIRMED") return { ok: false, error: "This booking can't be changed." };
+  if (!b || (b.status !== "CONFIRMED" && b.status !== "PENDING")) return { ok: false, error: "This booking can't be changed." };
+  const wasInvite = b.status === "PENDING";
   if (!(await isStillFree(newStartIso, b.id))) return { ok: false, error: "That time was just taken. Please pick another." };
   const s = await getBookingSettings();
   const start = new Date(newStartIso);
   const end = new Date(start.getTime() + s.durationMin * 60_000);
   const old = b.startAt;
   try {
-    await prisma.booking.update({ where: { id: b.id }, data: { slotKey: start.toISOString(), startAt: start, endAt: end, reminderSentAt: null } });
+    await prisma.booking.update({
+      where: { id: b.id },
+      data: { slotKey: start.toISOString(), startAt: start, endAt: end, reminderSentAt: null, ...(wasInvite ? { status: "CONFIRMED", respondedAt: new Date() } : {}) },
+    });
   } catch {
     return { ok: false, error: "That time was just taken. Please pick another." };
   }
@@ -216,13 +351,16 @@ export async function rescheduleBooking(token: string, newStartIso: string): Pro
     if (b.googleEventId) await moveEvent(b.googleEventId, start, end, s.timezone);
   } catch (err) {
     console.error("Google event move failed:", err);
-    await prisma.booking.update({ where: { id: b.id }, data: { slotKey: old.toISOString(), startAt: old, endAt: new Date(old.getTime() + s.durationMin * 60_000) } });
+    await prisma.booking.update({ where: { id: b.id }, data: { slotKey: old.toISOString(), startAt: old, endAt: b.endAt, status: b.status, respondedAt: b.respondedAt } });
     return { ok: false, error: "We couldn't reach the calendar to move your time. Please try again in a moment." };
   }
   const updated = await prisma.booking.findUniqueOrThrow({ where: { id: b.id } });
-  await sendBookingEmail(updated, s, "rescheduled");
-  await notifyFirm(`Rescheduled: ${s.title} with ${b.firstName}${b.lastName ? ` ${b.lastName}` : ""}`, [
-    `Moved from ${longDateTime(old, s.timezone)} to ${longDateTime(start, s.timezone)}.`,
+  await sendBookingEmail(updated, s, wasInvite ? "confirmed" : "rescheduled");
+  await notifyFirm(`${wasInvite ? "Accepted at a new time" : "Rescheduled"}: ${s.title} with ${b.firstName}${b.lastName ? ` ${b.lastName}` : ""}`, [
+    wasInvite
+      ? `Your invite was for ${longDateTime(old, s.timezone)}. They picked ${longDateTime(start, s.timezone)} instead, and it's confirmed.`
+      : `Moved from ${longDateTime(old, s.timezone)} to ${longDateTime(start, s.timezone)}.`,
+    updated.meetLink ? `Meet: ${updated.meetLink}` : "",
   ]);
   return { ok: true };
 }
@@ -257,14 +395,16 @@ export function buildIcs(b: Booking, s: BookingSettings, method: "REQUEST" | "CA
   ].filter(Boolean).join("\r\n");
 }
 
-type Kind = "confirmed" | "rescheduled" | "cancelled" | "reminder";
+type Kind = "invite" | "confirmed" | "rescheduled" | "cancelled" | "reminder";
 
 export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kind) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BOOKING_FROM_EMAIL || process.env.BILLING_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) return;
   const when = longDateTime(b.startAt, s.timezone);
+  const minutes = Math.round((b.endAt.getTime() - b.startAt.getTime()) / 60_000);
   const heading = {
+    invite: "You're invited to a call.",
     confirmed: "You're booked.",
     rescheduled: "Your call has been moved.",
     cancelled: "Your call is cancelled.",
@@ -273,13 +413,20 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
   const P = (t: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.6;color:#2b2d31;">${t}</p>`;
   const body =
     P(`Hi ${esc(b.firstName)},`) +
-    (kind === "cancelled"
+    (kind === "invite"
+      ? P(`Apex Capital Consultants would like to set up a ${esc(s.title.toLowerCase())} with you on <strong>${esc(when)}</strong> (${minutes} minutes, by video).`) +
+        P(`<strong>About:</strong> ${esc(b.topic)}`) +
+        (b.inviteNote ? P(esc(b.inviteNote).replace(/\n/g, "<br>")) : "") +
+        P("Does that time work? Accept it, pick a different time, or decline using the button below.")
+      : kind === "cancelled"
       ? P(`Your ${esc(s.title.toLowerCase())} on <strong>${esc(when)}</strong> is cancelled. If you'd like a new time, you can book again any time.`)
-      : P(`Your ${esc(s.title.toLowerCase())} with Apex is on <strong>${esc(when)}</strong> (${s.durationMin} minutes).`) +
+      : P(`Your ${esc(s.title.toLowerCase())} with Apex is on <strong>${esc(when)}</strong> (${minutes} minutes).`) +
         (b.meetLink ? P(`Join by video: <a href="${b.meetLink}" style="color:#2f5f7a;">${esc(b.meetLink)}</a>`) : "") +
         P(kind === "reminder" ? "See you soon." : "A calendar file is attached so you can add it to your calendar."));
   const cta = kind === "cancelled"
     ? { label: "Book a new time", url: `${SITE_URL}/consultation` }
+    : kind === "invite"
+    ? { label: "Accept or decline", url: manageUrl(b.token) }
     : { label: "Reschedule or cancel", url: manageUrl(b.token) };
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#F1F1EE;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EE;"><tr><td align="center" style="padding:32px 16px;">
@@ -295,8 +442,9 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
 </td></tr>
 <tr><td style="padding:20px 32px 30px;border-top:1px solid #e3e3de;"><p style="margin:0;font-size:12px;color:#8A8D8F;">Apex Capital Consultants &middot; ${esc(s.title)}</p></td></tr>
 </table></td></tr></table></body></html>`;
-  const text = `${heading}\n\nHi ${b.firstName},\n\n${kind === "cancelled" ? `Your ${s.title.toLowerCase()} on ${when} is cancelled.` : `Your ${s.title.toLowerCase()} with Apex is on ${when}.${b.meetLink ? `\nJoin: ${b.meetLink}` : ""}`}\n\n${cta.label}: ${cta.url}`;
+  const text = `${heading}\n\nHi ${b.firstName},\n\n${kind === "invite" ? `Apex Capital Consultants would like to set up a ${s.title.toLowerCase()} with you on ${when} (${minutes} minutes, by video).\n\nAbout: ${b.topic}${b.inviteNote ? `\n\n${b.inviteNote}` : ""}` : kind === "cancelled" ? `Your ${s.title.toLowerCase()} on ${when} is cancelled.` : `Your ${s.title.toLowerCase()} with Apex is on ${when}.${b.meetLink ? `\nJoin: ${b.meetLink}` : ""}`}\n\n${cta.label}: ${cta.url}`;
   const subject = {
+    invite: `Invitation: ${s.title} with Apex — ${when}`,
     confirmed: `Confirmed: ${s.title} with Apex — ${when}`,
     rescheduled: `Moved: ${s.title} with Apex — ${when}`,
     cancelled: `Cancelled: ${s.title} with Apex`,
@@ -310,7 +458,7 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
       html,
       text,
       replyTo: process.env.BILLING_REPLY_TO || undefined,
-      attachments: kind === "reminder" ? undefined : [{ filename: "apex-consultation.ics", content: Buffer.from(buildIcs(b, s, kind === "cancelled" ? "CANCEL" : "REQUEST")) }],
+      attachments: kind === "reminder" || kind === "invite" ? undefined : [{ filename: "apex-consultation.ics", content: Buffer.from(buildIcs(b, s, kind === "cancelled" ? "CANCEL" : "REQUEST")) }],
     });
   } catch (err) {
     console.error(`Booking ${kind} email failed:`, err);

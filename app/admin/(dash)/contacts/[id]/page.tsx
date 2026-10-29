@@ -28,13 +28,16 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
             {sub && <> &middot; Minutes: {sub.status === "ACTIVE" ? "subscribed" : "unsubscribed"}</>}
           </p>
         </div>
-        {contact.client ? (
-          <Link className="btn-ghost" href={`/admin/clients/${contact.client.id}`}>View client</Link>
-        ) : (
-          <form action={createClientFromContact.bind(null, contact.id)}>
-            <button type="submit" className="btn-solid">Make client</button>
-          </form>
-        )}
+        <div className="editor-actions">
+          <Link className="btn-ghost" href={`/admin/bookings/new?contact=${contact.id}`}>Set up a call</Link>
+          {contact.client ? (
+            <Link className="btn-ghost" href={`/admin/clients/${contact.client.id}`}>View client</Link>
+          ) : (
+            <form action={createClientFromContact.bind(null, contact.id)}>
+              <button type="submit" className="btn-solid">Make client</button>
+            </form>
+          )}
+        </div>
       </div>
 
       <h2 className="admin-h2">Inquiries</h2>

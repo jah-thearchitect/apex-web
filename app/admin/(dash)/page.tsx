@@ -29,7 +29,7 @@ export default async function AdminOverview() {
     prisma.subscriber.count({ where: { status: "ACTIVE" } }),
   ]);
   const [calls, bookingSettings] = await Promise.all([
-    prisma.booking.findMany({ where: { status: "CONFIRMED", startAt: { gte: new Date() } }, orderBy: { startAt: "asc" }, take: 5 }),
+    prisma.booking.findMany({ where: { status: { in: ["CONFIRMED", "PENDING"] }, startAt: { gte: new Date() } }, orderBy: { startAt: "asc" }, take: 5 }),
     getBookingSettings(),
   ]);
 
@@ -61,13 +61,16 @@ export default async function AdminOverview() {
       </div>
 
       <section className="overview-card" style={{ marginBottom: 32 }}>
-        <h2 className="admin-h2">Upcoming calls</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+          <h2 className="admin-h2">Upcoming calls</h2>
+          <Link href="/admin/bookings/new" className="admin-back">+ Set up a call</Link>
+        </div>
         {calls.length === 0 ? <p className="admin-empty">No calls booked.</p> : (
           <table className="admin-table"><tbody>
             {calls.map((c) => (
               <tr key={c.id}>
                 <td>{formatInZone(c.startAt, bookingSettings.timezone, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
-                <td>{c.firstName} {c.lastName ?? ""}{c.businessName && <><br /><small>{c.businessName}</small></>}</td>
+                <td>{c.firstName} {c.lastName ?? ""}{c.businessName && <><br /><small>{c.businessName}</small></>}{c.status === "PENDING" && <><br /><small>Awaiting their reply</small></>}</td>
                 <td style={{ textAlign: "right" }}>{c.meetLink && <a href={c.meetLink} target="_blank" rel="noopener noreferrer">Meet</a>}</td>
               </tr>
             ))}
