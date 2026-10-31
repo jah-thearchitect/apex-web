@@ -128,7 +128,7 @@ export default async function WorkLogPage({ searchParams }: { searchParams: Prom
 
       {entries.length === 0 ? <p className="admin-empty">Nothing logged for {monthLabel(month)}{clientId ? " for this client" : ""} yet.</p> : (
         <table className="admin-table">
-          <thead><tr><th>Date</th><th>Work</th><th className="keep">Time</th><th className="keep" /></tr></thead>
+          <thead><tr><th>Date</th><th>Work</th><th>Time</th><th /></tr></thead>
           <tbody>
             {entries.map((e) => (
               <tr key={e.id}>
@@ -142,9 +142,13 @@ export default async function WorkLogPage({ searchParams }: { searchParams: Prom
                     {e.requestId && <> &middot; from update request</>}
                   </small>
                   {e.details && <><br /><small style={{ whiteSpace: "pre-wrap" }}>{e.details}</small></>}
+                  <div className="mobile-only" style={{ alignItems: "center" }}>
+                    {minutesLabel(e.minutes) && <span>{minutesLabel(e.minutes)}</span>}
+                    <Link className="btn-ghost" href={`/admin/worklog/${e.id}`}>Edit</Link>
+                  </div>
                 </td>
-                <td className="keep" style={{ whiteSpace: "nowrap" }}>{minutesLabel(e.minutes) || <small>no time</small>}</td>
-                <td className="keep" style={{ textAlign: "right" }}><Link className="btn-ghost" href={`/admin/worklog/${e.id}`}>Edit</Link></td>
+                <td style={{ whiteSpace: "nowrap" }}>{minutesLabel(e.minutes) || <small>no time</small>}</td>
+                <td style={{ textAlign: "right" }}><Link className="btn-ghost" href={`/admin/worklog/${e.id}`}>Edit</Link></td>
               </tr>
             ))}
           </tbody>

@@ -251,7 +251,8 @@
 .admin-table td a:hover{ color: var(--accent-bright); }
 .row-actions{ display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
 .row-actions form{ display: inline-block; }
-@media (max-width: 640px){ .admin-table th:nth-child(n+3):not(.keep), .admin-table td:nth-child(n+3):not(.keep){ display: none; } .admin-table td.keep{ padding-right: 6px; } .admin-table .btn-ghost, .admin-table .btn-solid{ padding: .8em 1em; } }
+.mobile-only{ display: none; }
+@media (max-width: 640px){ .admin-table th:nth-child(n+3), .admin-table td:nth-child(n+3){ display: none; } .mobile-only{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; } .admin-table .mobile-only .btn-ghost, .admin-table .mobile-only .btn-solid{ padding: .8em 1em; } }
 .pill{ font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 9px; border: 1px solid var(--line-ink); color: var(--on-ink-soft); white-space: nowrap; }
 .pill-live{ border-color: var(--accent); color: var(--accent-bright); }
 

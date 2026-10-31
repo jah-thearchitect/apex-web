@@ -24,6 +24,17 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
       take: 200,
     }),
   ]);
+  const Actions = ({ b }: { b: (typeof bookings)[number] }) => (
+    <>
+      {b.meetLink && (b.status === "CONFIRMED" || b.status === "PENDING") && <a className="btn-solid" href={b.meetLink} target="_blank" rel="noopener noreferrer">Join Meet</a>}
+      <Link className="btn-ghost" href={`/admin/bookings/${b.id}`}>{b.status === "CONFIRMED" || b.status === "PENDING" ? "Message" : "Details"}</Link>
+      {(b.status === "CONFIRMED" || b.status === "PENDING") && b.startAt > now && (
+        <form action={adminCancelBooking.bind(null, b.id)}>
+          <ConfirmSubmit className="btn-ghost danger" message={`${b.status === "PENDING" ? "Withdraw the invite to" : "Cancel the call with"} ${b.firstName}? They will get a cancellation email.`}>{b.status === "PENDING" ? "Withdraw" : "Cancel"}</ConfirmSubmit>
+        </form>
+      )}
+    </>
+  );
   const when = (d: Date) => formatInZone(d, s.timezone, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
   return (
@@ -47,7 +58,7 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
 
       {bookings.length === 0 ? <p className="admin-empty">Nothing here.</p> : (
         <table className="admin-table">
-          <thead><tr><th>When</th><th>Who</th><th>About</th><th className="keep" /></tr></thead>
+          <thead><tr><th>When</th><th>Who</th><th>About</th><th /></tr></thead>
           <tbody>
             {bookings.map((b) => (
               <tr key={b.id}>
@@ -59,22 +70,13 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
                   {b.contactId ? <Link href={`/admin/contacts/${b.contactId}`}>{b.firstName} {b.lastName ?? ""}</Link> : `${b.firstName} ${b.lastName ?? ""}`}
                   {b.businessName && <><br /><small>{b.businessName}</small></>}
                   <br /><small>{b.email}{b.phone ? ` · ${b.phone}` : ""}</small>
+                  <div className="mobile-only"><Actions b={b} /></div>
                 </td>
                 <td style={{ maxWidth: 420 }}>
                   <small style={{ whiteSpace: "pre-wrap" }}>{b.topic}</small>
                   {b.declineReason && <><br /><small style={{ whiteSpace: "pre-wrap" }}><strong>Their note:</strong> {b.declineReason}</small></>}
                 </td>
-                <td className="keep">
-                  <div className="row-actions">
-                  {b.meetLink && (b.status === "CONFIRMED" || b.status === "PENDING") && <a className="btn-solid" href={b.meetLink} target="_blank" rel="noopener noreferrer">Join Meet</a>}
-                  <Link className="btn-ghost" href={`/admin/bookings/${b.id}`}>{b.status === "CONFIRMED" || b.status === "PENDING" ? "Message" : "Details"}</Link>
-                  {(b.status === "CONFIRMED" || b.status === "PENDING") && b.startAt > now && (
-                    <form action={adminCancelBooking.bind(null, b.id)}>
-                      <ConfirmSubmit className="btn-ghost danger" message={`${b.status === "PENDING" ? "Withdraw the invite to" : "Cancel the call with"} ${b.firstName}? They will get a cancellation email.`}>{b.status === "PENDING" ? "Withdraw" : "Cancel"}</ConfirmSubmit>
-                    </form>
-                  )}
-                  </div>
-                </td>
+                <td><div className="row-actions"><Actions b={b} /></div></td>
               </tr>
             ))}
           </tbody>
