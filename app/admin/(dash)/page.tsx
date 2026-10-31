@@ -71,7 +71,7 @@ export default async function AdminOverview() {
               <tr key={c.id}>
                 <td>{formatInZone(c.startAt, bookingSettings.timezone, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
                 <td>{c.firstName} {c.lastName ?? ""}{c.businessName && <><br /><small>{c.businessName}</small></>}{c.status === "PENDING" && <><br /><small>Awaiting their reply</small></>}</td>
-                <td style={{ textAlign: "right" }}>{c.meetLink && <a href={c.meetLink} target="_blank" rel="noopener noreferrer">Meet</a>}</td>
+                <td className="keep"><div className="row-actions">{c.meetLink && <a className="btn-solid" href={c.meetLink} target="_blank" rel="noopener noreferrer">Join Meet</a>}<Link className="btn-ghost" href={`/admin/bookings/${c.id}`}>Message</Link></div></td>
               </tr>
             ))}
           </tbody></table>

@@ -22,6 +22,7 @@ export default async function AdminDash({ children }: { children: React.ReactNod
             <Link href="/admin/quotes">Quotes</Link>
             <Link href="/admin/invoices">Invoices</Link>
             <Link href="/admin/bookings">Bookings</Link>
+            <Link href="/admin/worklog">Work log</Link>
             <Link href="/admin/requests">Requests{newRequests > 0 && <span className="nav-count">{newRequests}</span>}</Link>
             <span className="admin-nav-sep" aria-hidden="true" />
             <Link href="/admin/posts">Posts</Link>

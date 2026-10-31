@@ -140,6 +140,7 @@ model Client {
   invoices         Invoice[]
   buildBriefs      BuildBrief[]
   changeRequests   ChangeRequest[]
+  workLogs         WorkLog[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -359,6 +360,7 @@ model Booking {
   inviteNote     String?
   respondedAt    DateTime?
   declineReason  String?
+  messages       BookingMessage[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -448,4 +450,42 @@ model RequestMessage {
   createdAt DateTime      @default(now())
 
   @@index([requestId])
+}
+
+// A note Apex sent a client about their booked call (confirmation, what to
+// bring). Kept so the booking shows what was already said.
+model BookingMessage {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+// ---------- Work log ----------
+
+// One piece of work done for a client. Internal: minutes are only for the
+// owner's own records and are never shown to the client. `requestId` links
+// the entry that is created automatically when an update request is done.
+model WorkLog {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  workDate  DateTime @db.Date
+  project   String?
+  category  String
+  title     String
+  details   String?
+  minutes   Int?
+  // Whether this entry may appear in the client's monthly report.
+  visible   Boolean  @default(true)
+  requestId String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, workDate])
+  @@index([workDate])
 }

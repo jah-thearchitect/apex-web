@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { Resend } from "resend";
 import type { Booking, BookingSettings } from "@/generated/prisma/client";
-import { notifyFirm } from "./billing";
+import { emailShell, notifyFirm, P as para, send } from "./billing";
 import { recordContact } from "./contacts";
 import { busyTimes, createEvent, deleteEvent, getConnection, moveEvent } from "./google";
 import { prisma } from "./prisma";
@@ -463,4 +463,68 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
   } catch (err) {
     console.error(`Booking ${kind} email failed:`, err);
   }
+}
+
+
+// ---------- follow-up message to a client about their call ----------
+
+/** Plain text to email HTML: blank lines split paragraphs, "- " lines become a list. */
+function messageToHtml(body: string) {
+  const out: string[] = [];
+  let list: string[] = [];
+  let lines: string[] = [];
+  const flushList = () => {
+    if (list.length) out.push(`<ul style="margin:0 0 14px;padding-left:22px;font-size:16px;line-height:1.6;color:#2b2d31;">${list.map((l) => `<li style="margin-bottom:4px;">${esc(l)}</li>`).join("")}</ul>`);
+    list = [];
+  };
+  const flushPara = () => {
+    if (lines.length) out.push(para(lines.map(esc).join("<br>")));
+    lines = [];
+  };
+  for (const raw of body.replace(/\r\n/g, "\n").split("\n")) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { flushList(); flushPara(); continue; }
+    if (/^[-•]\s+/.test(line)) { flushPara(); list.push(line.replace(/^[-•]\s+/, "")); continue; }
+    flushList();
+    lines.push(line);
+  }
+  flushList();
+  flushPara();
+  return out.join("");
+}
+
+/**
+ * Emails the client a note about their call (a confirmation, what to
+ * bring) with the date and Meet link beneath it. Apex is blind-copied, and
+ * replies go to the firm. Recorded on the booking once it has sent.
+ */
+export async function sendCallMessage(b: Booking, subject: string, body: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const s = await getBookingSettings();
+  const when = longDateTime(b.startAt, s.timezone);
+  const minutes = Math.round((b.endAt.getTime() - b.startAt.getTime()) / 60_000);
+  const detail =
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 4px;background:#F1F1EE;"><tr><td style="padding:16px 18px;font-size:15px;line-height:1.7;color:#2b2d31;">` +
+    `<strong>${esc(s.title)}</strong><br>${esc(when)} &middot; ${minutes} minutes` +
+    (b.meetLink ? `<br>Join by video: <a href="${b.meetLink}" style="color:#2f5f7a;">${esc(b.meetLink)}</a>` : "") +
+    `</td></tr></table>`;
+  const html = emailShell(
+    esc(subject),
+    messageToHtml(body) + detail,
+    { label: "View, reschedule, or cancel", url: manageUrl(b.token) },
+    "Apex Capital Consultants &middot; just reply to this email if you have questions.",
+  );
+  const text = `${body}
+
+${s.title}
+${when} (${minutes} minutes)${b.meetLink ? `
+Join by video: ${b.meetLink}` : ""}
+
+View, reschedule, or cancel: ${manageUrl(b.token)}`;
+  try {
+    await send(b.email, subject, html, text);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "The email didn't send." };
+  }
+  await prisma.bookingMessage.create({ data: { bookingId: b.id, subject, body } });
+  return { ok: true };
 }

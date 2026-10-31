@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { emailBriefLink, emailRequestDone, emailRequestQuestion, emailUpdateLink } from "@/lib/briefs";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
+import { logCompletedRequest } from "@/lib/workLog";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
@@ -94,6 +95,7 @@ export async function completeRequest(requestId: string, note: string, notify: b
     ...(body ? [prisma.requestMessage.create({ data: { requestId, from: "FIRM", body } })] : []),
     prisma.changeRequest.update({ where: { id: requestId }, data: { status: "DONE", completedAt: new Date() } }),
   ]);
+  await logCompletedRequest(requestId, body);
   revalidatePath(`/admin/requests/update/${requestId}`);
   revalidatePath("/admin/requests");
   revalidatePath("/admin", "layout");
@@ -110,6 +112,7 @@ export async function setRequestStatus(id: string, status: string): Promise<Resu
     .update({ where: { id }, data: { status: s, completedAt: s === "DONE" ? new Date() : null } })
     .catch(() => null);
   if (!cr) return { ok: false, error: "Request not found." };
+  if (s === "DONE") await logCompletedRequest(id, "");
   revalidatePath(`/admin/requests/update/${id}`);
   revalidatePath("/admin/requests");
   revalidatePath("/admin", "layout");

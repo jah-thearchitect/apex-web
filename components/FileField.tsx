@@ -4,12 +4,12 @@ import { useRef, useState } from "react";
 import type { FileRef } from "@/lib/briefQuestions";
 
 const LIMIT = 4 * 1024 * 1024;
-const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.svg,.heic,.pdf,.ai,.eps,.psd,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx,.zip";
+const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.svg,.heic,.heif,.pdf,.ai,.eps,.psd,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx,.zip";
 
 // Originals are kept whenever they fit (logos stay crisp). Only a photo
 // over the 4 MB request cap is shrunk, to 2400px WebP, before upload.
 async function fitUnderLimit(file: File): Promise<File> {
-  if (file.size <= LIMIT || !/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+  if (file.size <= LIMIT || !/^image\/(jpeg|png|webp|heic|heif)$/.test(file.type)) return file;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
@@ -69,7 +69,7 @@ export function FileField({
       >
         <input ref={input} type="file" multiple accept={ACCEPT} disabled={disabled || !!busy} onChange={(e) => add(e.target.files)} />
         <span>{busy || <>Drop files here or <u>browse</u></>}</span>
-        <small>Images, PDFs, Office files, ZIP · up to 4 MB each</small>
+        <small>Images, PDFs, Office files, ZIP · photos are resized automatically; PDFs up to 4 MB</small>
       </label>
       {error && <p className="ff-error" role="alert">{error}</p>}
       {files.length > 0 && (

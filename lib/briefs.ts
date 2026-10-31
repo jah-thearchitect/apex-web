@@ -144,7 +144,7 @@ export async function emailReceived(to: string, name: string, kind: "brief" | "u
 // ---------- Client uploads ----------
 
 const EXTENSIONS = new Set([
-  "jpg", "jpeg", "png", "webp", "gif", "svg", "heic", "pdf", "ai", "eps", "psd",
+  "jpg", "jpeg", "png", "webp", "gif", "svg", "heic", "heif", "pdf", "ai", "eps", "psd",
   "doc", "docx", "xls", "xlsx", "csv", "txt", "ppt", "pptx", "zip",
 ]);
 // Vercel caps request bodies at 4.5 MB; photos are shrunk in the browser first.

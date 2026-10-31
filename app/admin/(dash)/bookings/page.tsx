@@ -47,7 +47,7 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
 
       {bookings.length === 0 ? <p className="admin-empty">Nothing here.</p> : (
         <table className="admin-table">
-          <thead><tr><th>When</th><th>Who</th><th>About</th><th /></tr></thead>
+          <thead><tr><th>When</th><th>Who</th><th>About</th><th className="keep" /></tr></thead>
           <tbody>
             {bookings.map((b) => (
               <tr key={b.id}>
@@ -64,13 +64,16 @@ export default async function Bookings({ searchParams }: { searchParams: Promise
                   <small style={{ whiteSpace: "pre-wrap" }}>{b.topic}</small>
                   {b.declineReason && <><br /><small style={{ whiteSpace: "pre-wrap" }}><strong>Their note:</strong> {b.declineReason}</small></>}
                 </td>
-                <td style={{ textAlign: "right" }}>
-                  {b.meetLink && (b.status === "CONFIRMED" || b.status === "PENDING") && <a className="btn-ghost" href={b.meetLink} target="_blank" rel="noopener noreferrer">Meet</a>}
+                <td className="keep">
+                  <div className="row-actions">
+                  {b.meetLink && (b.status === "CONFIRMED" || b.status === "PENDING") && <a className="btn-solid" href={b.meetLink} target="_blank" rel="noopener noreferrer">Join Meet</a>}
+                  <Link className="btn-ghost" href={`/admin/bookings/${b.id}`}>{b.status === "CONFIRMED" || b.status === "PENDING" ? "Message" : "Details"}</Link>
                   {(b.status === "CONFIRMED" || b.status === "PENDING") && b.startAt > now && (
-                    <form action={adminCancelBooking.bind(null, b.id)} style={{ display: "inline-block", marginLeft: 8 }}>
+                    <form action={adminCancelBooking.bind(null, b.id)}>
                       <ConfirmSubmit className="btn-ghost danger" message={`${b.status === "PENDING" ? "Withdraw the invite to" : "Cancel the call with"} ${b.firstName}? They will get a cancellation email.`}>{b.status === "PENDING" ? "Withdraw" : "Cancel"}</ConfirmSubmit>
                     </form>
                   )}
+                  </div>
                 </td>
               </tr>
             ))}

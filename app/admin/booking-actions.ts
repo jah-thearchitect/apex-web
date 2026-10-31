@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { cancelBooking, conflictsFor, getBookingSettings, inviteBooking } from "@/lib/booking";
+import { cancelBooking, conflictsFor, getBookingSettings, inviteBooking, sendCallMessage } from "@/lib/booking";
 import { disconnectGoogle } from "@/lib/google";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
@@ -128,4 +128,21 @@ export async function inviteClient(_prev: InviteState, form: FormData): Promise<
   revalidatePath("/admin/bookings");
   revalidatePath("/admin");
   redirect("/admin/bookings?invited=1");
+}
+
+export type CallMessageState = { error?: string; sent?: number };
+
+/** Emails the client a note about their call (confirmation, what to have ready). */
+export async function sendCallMessageAction(bookingId: string, _prev: CallMessageState, form: FormData): Promise<CallMessageState> {
+  await requireAdmin();
+  const subject = String(form.get("subject") ?? "").trim().slice(0, 200);
+  const body = String(form.get("body") ?? "").trim().slice(0, 5000);
+  if (!subject) return { error: "Add a subject." };
+  if (!body) return { error: "Write a message first." };
+  const b = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!b || (b.status !== "CONFIRMED" && b.status !== "PENDING")) return { error: "This call is no longer active, so there's nothing to send about." };
+  const res = await sendCallMessage(b, subject, body);
+  if (!res.ok) return { error: `Not sent: ${res.error.replace(/\.$/, "")}.` };
+  revalidatePath(`/admin/bookings/${bookingId}`);
+  return { sent: Date.now() };
 }
