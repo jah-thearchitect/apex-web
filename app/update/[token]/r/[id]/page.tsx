@@ -41,7 +41,7 @@ export default async function RequestThreadPage({ params }: { params: Promise<{ 
             {r.location && <p className="thread-files">Where: {r.location}</p>}
           </div>
 
-          <RequestThread messages={r.messages} clientName="You" />
+          <RequestThread messages={r.messages} clientName="You" fileHref={(p) => `/api/update/${token}/file/${p.split("/").map(encodeURIComponent).join("/")}`} />
           <RequestReplyForm token={token} requestId={r.id} />
           <p className="update-aside">
             Something different you need done? <Link href={`/update/${token}#new`}>Send a new request</Link>; you can have more than one open at a time.

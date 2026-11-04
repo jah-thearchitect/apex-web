@@ -11,6 +11,21 @@ export const requestUrl = (clientToken: string, requestId: string) => `${SITE_UR
 
 const firstName = (full: string) => full.split(/\s+/)[0] || "there";
 
+type Attached = { path: string; name: string; size: number };
+
+/** Where a client opens a file on their request (their update token authorizes it). */
+export const requestFileUrl = (clientToken: string, path: string) =>
+  `${SITE_URL}/api/update/${clientToken}/file/${path.split("/").map(encodeURIComponent).join("/")}`;
+
+function attachedHtml(files: Attached[], clientToken: string) {
+  if (!files.length) return "";
+  const links = files.map((f) => `<a href="${requestFileUrl(clientToken, f.path)}" style="color:#2f5f7a;">${esc(f.name)}</a>`).join("<br>");
+  return P(`<strong>Attached:</strong><br>${links}`);
+}
+
+const attachedText = (files: Attached[], clientToken: string) =>
+  files.length ? `\n\nAttached:\n${files.map((f) => `${f.name}: ${requestFileUrl(clientToken, f.path)}`).join("\n")}` : "";
+
 type ClientLite = { id: string; businessName: string; contactName: string; email: string; requestToken: string };
 
 /** Emails the client their build brief link and stamps sentAt. Throws on email failure. */
@@ -72,7 +87,8 @@ export async function emailUpdateLink(client: ClientLite) {
 export async function emailRequestQuestion(
   req: { id: string; kind: string; name: string; email: string; details: string },
   client: ClientLite,
-  question: string
+  question: string,
+  files: Attached[] = []
 ) {
   const s = await getSettings();
   const url = requestUrl(client.requestToken, req.id);
@@ -83,13 +99,14 @@ export async function emailRequestQuestion(
     P(`Hi ${esc(firstName(req.name))},`) +
       P(`About your update request (<strong>${esc(req.kind)}</strong>):`) +
       `<div style="margin:0 0 18px;padding:14px 18px;border-left:3px solid #B4863C;background:#F6F4EE;font-size:16px;line-height:1.6;color:#101113;">${asked}</div>` +
+      attachedHtml(files, client.requestToken) +
       P("Answer with the button below, where you can also attach files. Replying to this email works too.") +
       `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>` +
       `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Need something else? <a href="${updateUrl(client.requestToken)}#new" style="color:#2f5f7a;">Send a new request</a>.</p>`,
     { label: "Answer the question", url },
     `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
   );
-  const text = `Hi ${firstName(req.name)},\n\nAbout your update request (${req.kind}):\n\n${question}\n\nAnswer here (you can attach files): ${url}\n\nYour request: ${original}`;
+  const text = `Hi ${firstName(req.name)},\n\nAbout your update request (${req.kind}):\n\n${question}${attachedText(files, client.requestToken)}\n\nAnswer here (you can attach files): ${url}\n\nYour request: ${original}`;
   await send(req.email, `Question about your update request: ${req.kind}`, html, text);
 }
 
@@ -97,7 +114,8 @@ export async function emailRequestQuestion(
 export async function emailRequestDone(
   req: { id: string; kind: string; name: string; email: string; details: string },
   client: ClientLite,
-  note: string
+  note: string,
+  files: Attached[] = []
 ) {
   const s = await getSettings();
   const url = requestUrl(client.requestToken, req.id);
@@ -110,13 +128,14 @@ export async function emailRequestDone(
     P(`Hi ${esc(firstName(req.name))},`) +
       P(`Your update request (<strong>${esc(req.kind)}</strong>) for ${esc(client.businessName)} is complete.`) +
       (note ? P("Here’s what was done:") + noteHtml : "") +
+      attachedHtml(files, client.requestToken) +
       P("Take a look, and if anything isn’t quite right, reply on your request page and we’ll pick it back up.") +
       `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Your request: ${esc(original)}</p>` +
       `<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:#8A8D8F;">Need something else? <a href="${updateUrl(client.requestToken)}#new" style="color:#2f5f7a;">Send a new request</a>.</p>`,
     { label: "View your request", url },
     `${esc(s.legalName)} &middot; ${esc(client.businessName)}`
   );
-  const text = `Hi ${firstName(req.name)},\n\nYour update request (${req.kind}) for ${client.businessName} is complete.${note ? `\n\nWhat was done:\n${note}` : ""}\n\nIf anything isn't quite right, reply on your request page: ${url}\n\nYour request: ${original}`;
+  const text = `Hi ${firstName(req.name)},\n\nYour update request (${req.kind}) for ${client.businessName} is complete.${note ? `\n\nWhat was done:\n${note}` : ""}${attachedText(files, client.requestToken)}\n\nIf anything isn't quite right, reply on your request page: ${url}\n\nYour request: ${original}`;
   await send(req.email, `Done: your update request (${req.kind})`, html, text);
 }
 

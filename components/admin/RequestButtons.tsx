@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { completeRequest, reopenBrief, sendBuildBrief, sendUpdateLink, setRequestStatus } from "@/app/admin/request-actions";
+import type { FileRef } from "@/lib/briefQuestions";
+import { FileField } from "../FileField";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
@@ -61,6 +63,7 @@ export function RequestStatusPicker({ id, status, email }: { id: string; status:
   const [finishing, setFinishing] = useState(false);
   const [doneNote, setDoneNote] = useState("");
   const [notify, setNotify] = useState(true);
+  const [doneFiles, setDoneFiles] = useState<FileRef[]>([]);
   useEffect(() => setValue(status), [status]);
 
   return (
@@ -93,18 +96,19 @@ export function RequestStatusPicker({ id, status, email }: { id: string; status:
       {finishing && (
         <div className="done-form">
           <label className="field">
-            <span>What was done <small>sent to the client and saved on the request</small></span>
+            <span>What was done <small>sent to the client and saved on the request. Attach files below if you have something to send.</small></span>
             <textarea rows={4} value={doneNote} onChange={(e) => setDoneNote(e.target.value)}
               placeholder="Swapped the hero photo for the one you sent and tightened the headline. It's live now." />
           </label>
+          <FileField uploadUrl={`/api/admin/requests/${id}/upload`} files={doneFiles} onChange={setDoneFiles} max={10} />
           <label className="check">
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Email {email} that it&rsquo;s done
           </label>
           <div className="link-box">
             <button type="button" className="btn-solid" disabled={pending} onClick={() => start(async () => {
-              const r = await completeRequest(id, doneNote, notify);
+              const r = await completeRequest(id, doneNote, notify, doneFiles);
               setNote(r.ok ? r.message : r.error);
-              if (r.ok) { setValue("DONE"); setFinishing(false); setDoneNote(""); router.refresh(); }
+              if (r.ok) { setValue("DONE"); setFinishing(false); setDoneNote(""); setDoneFiles([]); router.refresh(); }
             })}>
               {pending ? "Working…" : notify ? "Mark done & notify client" : "Mark done"}
             </button>

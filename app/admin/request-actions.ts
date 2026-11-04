@@ -8,6 +8,18 @@ import { logCompletedRequest } from "@/lib/workLog";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };
 
+type Attached = { path: string; name: string; size: number };
+
+/** Only files Apex uploaded to this client's own folder may be attached. */
+function cleanAttachments(files: unknown, clientId: string): Attached[] {
+  const prefix = `requests/${clientId}/apex/`;
+  return (Array.isArray(files) ? files : [])
+    .slice(0, 10)
+    .filter((f): f is Attached => !!f && typeof f === "object" && typeof (f as Attached).path === "string")
+    .filter((f) => f.path.startsWith(prefix) && !f.path.includes(".."))
+    .map((f) => ({ path: f.path.slice(0, 300), name: String(f.name ?? "file").slice(0, 200), size: Number(f.size) || 0 }));
+}
+
 /**
  * Sends the build brief by hand (prototype deals, or a resend). Reuses the
  * client's brief in progress if there is one, so they never get two.
@@ -54,19 +66,20 @@ export async function sendUpdateLink(clientId: string): Promise<Result> {
  * Emails the client a follow-up question on their update request, records
  * it in the request's thread, and marks the request as waiting on them.
  */
-export async function askClient(requestId: string, question: string): Promise<Result> {
+export async function askClient(requestId: string, question: string, attachments: Attached[] = []): Promise<Result> {
   await requireAdmin();
   const body = question.trim().slice(0, 4000);
   if (!body) return { ok: false, error: "Write your question first." };
   const req = await prisma.changeRequest.findUnique({ where: { id: requestId }, include: { client: true } });
   if (!req) return { ok: false, error: "Request not found." };
+  const files = cleanAttachments(attachments, req.clientId);
   try {
-    await emailRequestQuestion(req, req.client, body);
+    await emailRequestQuestion(req, req.client, body, files);
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "The email didn't send." };
   }
   await prisma.$transaction([
-    prisma.requestMessage.create({ data: { requestId, from: "FIRM", body } }),
+    prisma.requestMessage.create({ data: { requestId, from: "FIRM", body, files } }),
     prisma.changeRequest.update({ where: { id: requestId }, data: { status: "WAITING", completedAt: null } }),
   ]);
   revalidatePath(`/admin/requests/update/${requestId}`);
@@ -78,21 +91,22 @@ export async function askClient(requestId: string, question: string): Promise<Re
  * Marks an update request done. The note (what was done) is added to the
  * request's thread, and the client is emailed unless `notify` is false.
  */
-export async function completeRequest(requestId: string, note: string, notify: boolean): Promise<Result> {
+export async function completeRequest(requestId: string, note: string, notify: boolean, attachments: Attached[] = []): Promise<Result> {
   await requireAdmin();
   const body = note.trim().slice(0, 4000);
   const req = await prisma.changeRequest.findUnique({ where: { id: requestId }, include: { client: true } });
   if (!req) return { ok: false, error: "Request not found." };
+  const files = cleanAttachments(attachments, req.clientId);
   if (notify) {
     try {
-      await emailRequestDone(req, req.client, body);
+      await emailRequestDone(req, req.client, body, files);
     } catch (err) {
       const why = (err instanceof Error ? err.message : "unknown error").replace(/\.$/, "");
       return { ok: false, error: `Not marked done, because the email didn't send: ${why}. Try again, or untick the email box.` };
     }
   }
   await prisma.$transaction([
-    ...(body ? [prisma.requestMessage.create({ data: { requestId, from: "FIRM", body } })] : []),
+    ...(body || files.length ? [prisma.requestMessage.create({ data: { requestId, from: "FIRM", body, files } })] : []),
     prisma.changeRequest.update({ where: { id: requestId }, data: { status: "DONE", completedAt: new Date() } }),
   ]);
   await logCompletedRequest(requestId, body);

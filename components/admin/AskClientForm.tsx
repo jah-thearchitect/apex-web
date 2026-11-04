@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { askClient } from "@/app/admin/request-actions";
+import type { FileRef } from "@/lib/briefQuestions";
+import { FileField } from "../FileField";
 
 /** Emails the client a follow-up question on their update request. */
 export function AskClientForm({ requestId, email }: { requestId: string; email: string }) {
   const router = useRouter();
   const [text, setText] = useState("");
   const [note, setNote] = useState("");
+  const [files, setFiles] = useState<FileRef[]>([]);
   const [pending, start] = useTransition();
 
   return (
@@ -19,16 +22,17 @@ export function AskClientForm({ requestId, email }: { requestId: string; email: 
         if (!text.trim()) { setNote("Write your question first."); return; }
         if (!window.confirm(`Email this question to ${email}?`)) return;
         start(async () => {
-          const r = await askClient(requestId, text);
+          const r = await askClient(requestId, text, files);
           setNote(r.ok ? r.message : r.error);
-          if (r.ok) { setText(""); router.refresh(); }
+          if (r.ok) { setText(""); setFiles([]); router.refresh(); }
         });
       }}
     >
       <label className="field">
-        <span>Ask the client <small>Emailed to {email}. They answer on the site and can attach files.</small></span>
+        <span>Ask the client <small>Emailed to {email}. They answer on the site and can attach files. Attach yours below if you need to send something.</small></span>
         <textarea rows={4} value={text} onChange={(e) => { setText(e.target.value); setNote(""); }} placeholder="Which photo should replace the current hero image? Send the highest-resolution version you have." />
       </label>
+      <FileField uploadUrl={`/api/admin/requests/${requestId}/upload`} files={files} onChange={setFiles} max={10} />
       <div className="link-box">
         <button type="submit" className="btn-solid" disabled={pending}>{pending ? "Sending…" : "Send question"}</button>
         {note && <span className="action-note" role="status">{note}</span>}
