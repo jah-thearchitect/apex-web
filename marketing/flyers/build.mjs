@@ -84,6 +84,21 @@ const FLYERS = [
     cta: "Book your consultation",
     url: "acc-funds.com/consultation",
   },
+  {
+    file: "07-digital-services",
+    image: "services",
+    heroHeight: 600,
+    eyebrow: "Digital services",
+    headline: "Digital services that *grow* your business.",
+    services: [
+      { name: "Websites", text: "Built to bring in customers." },
+      { name: "Apps", text: "Mobile and web apps made for your business." },
+      { name: "E-commerce", text: "Online stores that sell around the clock." },
+      { name: "Digital presentations", text: "Pitch decks and slides that win the room." },
+    ],
+    cta: "Book a consultation",
+    url: "acc-funds.com/consultation",
+  },
 ];
 
 const CSS = `
@@ -128,6 +143,10 @@ h1 em, .price em{font-style:italic;color:#D8B268}
 .offer .per{font-size:30px;color:#D8B268}
 .offer .what{font-size:28px;line-height:1.35;color:#EDEEEC;border-left:1.5px solid rgba(180,134,60,.6);padding-left:26px}
 .fine{font-size:20px;color:#7d8181;margin-top:16px}
+.services{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:34px}
+.svc{border:1.5px solid rgba(237,238,236,.14);border-top:3px solid #B4863C;background:rgba(10,11,13,.72);padding:22px 26px 24px}
+.svc h3{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:40px;line-height:1.1;color:#EDEEEC}
+.svc p{font-size:25px;line-height:1.4;color:#B9BCBC;margin-top:10px;text-wrap:balance}
 .foot{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;margin:44px 72px 64px;padding-top:30px;border-top:1.5px solid rgba(237,238,236,.14)}
 .cta{font-family:"IBM Plex Mono",monospace;font-size:24px;letter-spacing:.06em;background:#EDEEEC;color:#0A0B0D;padding:20px 30px;white-space:nowrap}
 .cta b{font-weight:500}
@@ -147,6 +166,7 @@ function page(f) {
   }
   if (f.checks) parts.push(`<ul class="list">${f.checks.map((c) => `<li>${c}</li>`).join("")}</ul>`);
   if (f.steps) parts.push(`<ol class="steps">${f.steps.map((s, i) => `<li><span>${i + 1}</span>${s}</li>`).join("")}</ol>`);
+  if (f.services) parts.push(`<div class="services">${f.services.map((x) => `<div class="svc"><h3>${x.name}</h3><p>${x.text}</p></div>`).join("")}</div>`);
   if (f.fine) parts.push(`<p class="fine">${f.fine}</p>`);
 
   return `<!doctype html><html><head><meta charset="utf-8">
