@@ -432,6 +432,7 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
       ? P(`Apex Capital Consultants would like to set up a ${esc(s.title.toLowerCase())} with you on <strong>${esc(when)}</strong> (${minutes} minutes, by video).`) +
         P(`<strong>About:</strong> ${esc(b.topic)}`) +
         (b.inviteNote ? P(esc(b.inviteNote).replace(/\n/g, "<br>")) : "") +
+        (extra.length ? P(`<strong>Attached:</strong> ${extra.map((e) => esc(e.filename)).join(", ")}`) : "") +
         P("Does that time work? Accept it, pick a different time, or decline using the button below.")
       : kind === "cancelled"
       ? P(`Your ${esc(s.title.toLowerCase())} on <strong>${esc(when)}</strong> is cancelled. If you'd like a new time, you can book again any time.`)
