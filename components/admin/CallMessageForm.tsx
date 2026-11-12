@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { sendCallMessageAction, type CallMessageState } from "@/app/admin/booking-actions";
+import type { FileRef } from "@/lib/briefQuestions";
+import { FileField } from "../FileField";
 
 // Things worth asking a client to have ready. Each one adds a bullet to the note.
 const PREP = [
@@ -19,6 +21,12 @@ export function CallMessageForm({ bookingId, email, defaultSubject, defaultBody 
   const [state, action, pending] = useActionState<CallMessageState, FormData>(sendCallMessageAction.bind(null, bookingId), {});
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
+  const [files, setFiles] = useState<FileRef[]>([]);
+
+  // Once it has sent, the attachments are done with.
+  useEffect(() => {
+    if (state.sent) setFiles([]);
+  }, [state.sent]);
 
   function addPrep(item: string) {
     const line = `- ${item}`;
@@ -59,6 +67,11 @@ export function CallMessageForm({ bookingId, email, defaultSubject, defaultBody 
         <span>Message <small>the call date, time, and Meet link are added below it automatically</small></span>
         <textarea name="body" rows={14} required maxLength={5000} value={body} onChange={(e) => setBody(e.target.value)} />
       </label>
+      <div className="field">
+        <span>Attach files <small>images, PDFs, or documents. They go with the email as attachments.</small></span>
+        <FileField uploadUrl="/api/admin/attachments" files={files} onChange={setFiles} max={5} />
+        <input type="hidden" name="files" value={JSON.stringify(files)} />
+      </div>
       {state.error && <p className="editor-status" style={{ color: "#e59a9a" }}>{state.error}</p>}
       {state.sent && <p className="editor-status">Sent to {email}. You were blind-copied.</p>}
       <div className="editor-actions">

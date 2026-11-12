@@ -2,6 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { inviteClient, type InviteState } from "@/app/admin/booking-actions";
+import type { FileRef } from "@/lib/briefQuestions";
+import { FileField } from "../FileField";
 
 export type Person = { email: string; firstName: string; lastName: string; businessName: string; label: string };
 export type Suggestion = { date: string; time: string; label: string };
@@ -30,6 +32,7 @@ export function InviteForm({
   // form action, which would wipe them when a clash warning comes back.
   const [when, setWhen] = useState({ date: "", time: "", durationMin: String(durationMin) });
   const [about, setAbout] = useState({ topic: "", note: "" });
+  const [files, setFiles] = useState<FileRef[]>([]);
 
   // Picking a known client or contact by email fills in the rest.
   function onEmail(email: string) {
@@ -87,6 +90,11 @@ export function InviteForm({
         <span>Personal note <small>optional, added to the email</small></span>
         <textarea name="note" rows={3} maxLength={2000} value={about.note} onChange={(e) => setAbout({ ...about, note: e.target.value })} />
       </label>
+      <div className="field">
+        <span>Attach files <small>optional: images, PDFs, or documents to send with the invite</small></span>
+        <FileField uploadUrl="/api/admin/attachments" files={files} onChange={setFiles} max={5} />
+        <input type="hidden" name="files" value={JSON.stringify(files)} />
+      </div>
 
       {state.error && <p className="editor-status" style={{ color: "#e59a9a" }}>{state.error}</p>}
       {state.conflicts && (

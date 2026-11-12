@@ -94,6 +94,17 @@ export default async function BookingDetail({ params }: { params: Promise<{ id: 
               <div className="inquiry-item" key={m.id}>
                 <small style={{ color: "var(--on-ink-faint)" }}>{sentAt(m.createdAt)} &middot; {m.subject}</small>
                 <div className="inquiry-body">{m.body}</div>
+                {Array.isArray(m.files) && m.files.length > 0 && (
+                  <small>
+                    Attached:{" "}
+                    {(m.files as { path: string; name: string }[]).map((f, i) => (
+                      <span key={f.path}>
+                        {i > 0 && " · "}
+                        <a href={`/api/admin/file/${f.path.split("/").map(encodeURIComponent).join("/")}`} target="_blank" rel="noopener">{f.name}</a>
+                      </span>
+                    ))}
+                  </small>
+                )}
               </div>
             ))}
           </div>

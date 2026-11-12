@@ -7,7 +7,7 @@ import { getAdminId } from "@/lib/session";
 export async function GET(_req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   if (!(await getAdminId())) return new NextResponse("Not found", { status: 404 });
   const pathname = (await params).path.map(decodeURIComponent).join("/");
-  if (!(pathname.startsWith("briefs/") || pathname.startsWith("requests/")) || pathname.includes("..")) {
+  if (!(pathname.startsWith("briefs/") || pathname.startsWith("requests/") || pathname.startsWith("attachments/")) || pathname.includes("..")) {
     return new NextResponse("Not found", { status: 404 });
   }
   return streamPrivateFile(pathname);

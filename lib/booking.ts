@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Resend } from "resend";
 import type { Booking, BookingSettings } from "@/generated/prisma/client";
 import { emailShell, notifyFirm, P as para, send } from "./billing";
+import { loadAttachments, type Attached } from "./emailAttachments";
 import { recordContact } from "./contacts";
 import { busyTimes, createEvent, deleteEvent, getConnection, moveEvent } from "./google";
 import { prisma } from "./prisma";
@@ -191,6 +192,7 @@ export type InviteInput = {
   businessName?: string;
   topic: string;
   note?: string;
+  files?: Attached[];
 };
 
 /**
@@ -226,6 +228,14 @@ export async function inviteBooking(input: InviteInput): Promise<{ ok: true; boo
   const start = input.start;
   const end = new Date(start.getTime() + input.durationMin * 60_000);
   const name = [input.firstName, input.lastName].filter(Boolean).join(" ");
+  const files = input.files ?? [];
+  // Read the attachments first, so a missing file stops things before a time is held.
+  let attachments: { filename: string; content: Buffer }[] = [];
+  try {
+    attachments = await loadAttachments(files);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Couldn't read an attachment." };
+  }
 
   let booking: Booking;
   try {
@@ -276,7 +286,12 @@ export async function inviteBooking(input: InviteInput): Promise<{ ok: true; boo
   const contactId = await recordContact({ email: input.email, firstName: input.firstName, lastName: input.lastName, source: "booking" }).catch(() => null);
   if (contactId) booking = await prisma.booking.update({ where: { id: booking.id }, data: { contactId } });
 
-  await sendBookingEmail(booking, s, "invite");
+  await sendBookingEmail(booking, s, "invite", attachments);
+  if (files.length) {
+    await prisma.bookingMessage
+      .create({ data: { bookingId: booking.id, subject: `Invitation: ${s.title} with Apex`, body: [input.topic, input.note].filter(Boolean).join("\n\n"), files } })
+      .catch((err) => console.error("Recording invite attachments failed:", err));
+  }
   return { ok: true, booking };
 }
 
@@ -397,7 +412,7 @@ export function buildIcs(b: Booking, s: BookingSettings, method: "REQUEST" | "CA
 
 type Kind = "invite" | "confirmed" | "rescheduled" | "cancelled" | "reminder";
 
-export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kind) {
+export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kind, extra: { filename: string; content: Buffer }[] = []) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BOOKING_FROM_EMAIL || process.env.BILLING_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) return;
@@ -458,7 +473,10 @@ export async function sendBookingEmail(b: Booking, s: BookingSettings, kind: Kin
       html,
       text,
       replyTo: process.env.BILLING_REPLY_TO || undefined,
-      attachments: kind === "reminder" || kind === "invite" ? undefined : [{ filename: "apex-consultation.ics", content: Buffer.from(buildIcs(b, s, kind === "cancelled" ? "CANCEL" : "REQUEST")) }],
+      attachments:
+        kind === "reminder" ? undefined
+        : kind === "invite" ? (extra.length ? extra : undefined)
+        : [{ filename: "apex-consultation.ics", content: Buffer.from(buildIcs(b, s, kind === "cancelled" ? "CANCEL" : "REQUEST")) }],
     });
   } catch (err) {
     console.error(`Booking ${kind} email failed:`, err);
@@ -498,8 +516,14 @@ function messageToHtml(body: string) {
  * bring) with the date and Meet link beneath it. Apex is blind-copied, and
  * replies go to the firm. Recorded on the booking once it has sent.
  */
-export async function sendCallMessage(b: Booking, subject: string, body: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function sendCallMessage(b: Booking, subject: string, body: string, files: Attached[] = []): Promise<{ ok: true } | { ok: false; error: string }> {
   const s = await getBookingSettings();
+  let attachments: { filename: string; content: Buffer }[] = [];
+  try {
+    attachments = await loadAttachments(files);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Couldn't read an attachment." };
+  }
   const when = longDateTime(b.startAt, s.timezone);
   const minutes = Math.round((b.endAt.getTime() - b.startAt.getTime()) / 60_000);
   const detail =
@@ -509,11 +533,13 @@ export async function sendCallMessage(b: Booking, subject: string, body: string)
     `</td></tr></table>`;
   const html = emailShell(
     esc(subject),
-    messageToHtml(body) + detail,
+    messageToHtml(body) + (files.length ? para(`<strong>Attached to this email:</strong> ${files.map((f) => esc(f.name)).join(", ")}`) : "") + detail,
     { label: "View, reschedule, or cancel", url: manageUrl(b.token) },
     "Apex Capital Consultants &middot; just reply to this email if you have questions.",
   );
-  const text = `${body}
+  const text = `${body}${files.length ? `
+
+Attached to this email: ${files.map((f) => f.name).join(", ")}` : ""}
 
 ${s.title}
 ${when} (${minutes} minutes)${b.meetLink ? `
@@ -521,10 +547,10 @@ Join by video: ${b.meetLink}` : ""}
 
 View, reschedule, or cancel: ${manageUrl(b.token)}`;
   try {
-    await send(b.email, subject, html, text);
+    await send(b.email, subject, html, text, attachments);
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "The email didn't send." };
   }
-  await prisma.bookingMessage.create({ data: { bookingId: b.id, subject, body } });
+  await prisma.bookingMessage.create({ data: { bookingId: b.id, subject, body, files } });
   return { ok: true };
 }

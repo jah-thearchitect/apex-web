@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cancelBooking, conflictsFor, getBookingSettings, inviteBooking, sendCallMessage } from "@/lib/booking";
+import { parseAttachments } from "@/lib/emailAttachments";
 import { disconnectGoogle } from "@/lib/google";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
@@ -123,6 +124,7 @@ export async function inviteClient(_prev: InviteState, form: FormData): Promise<
     businessName: str("businessName", 160),
     topic,
     note: str("note", 2000),
+    files: parseAttachments(form.get("files")),
   });
   if (!res.ok) return { error: res.error };
   revalidatePath("/admin/bookings");
@@ -141,7 +143,7 @@ export async function sendCallMessageAction(bookingId: string, _prev: CallMessag
   if (!body) return { error: "Write a message first." };
   const b = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!b || (b.status !== "CONFIRMED" && b.status !== "PENDING")) return { error: "This call is no longer active, so there's nothing to send about." };
-  const res = await sendCallMessage(b, subject, body);
+  const res = await sendCallMessage(b, subject, body, parseAttachments(form.get("files")));
   if (!res.ok) return { error: `Not sent: ${res.error.replace(/\.$/, "")}.` };
   revalidatePath(`/admin/bookings/${bookingId}`);
   return { sent: Date.now() };

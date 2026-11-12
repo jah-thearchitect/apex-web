@@ -69,12 +69,12 @@ function firmCopy(to: string) {
   return bcc && bcc.trim().toLowerCase() !== to.trim().toLowerCase() ? bcc : undefined;
 }
 
-export async function send(to: string, subject: string, html: string, text: string) {
+export async function send(to: string, subject: string, html: string, text: string, attachments?: { filename: string; content: Buffer }[]) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BILLING_FROM_EMAIL || process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) throw new Error("Email isn't configured (RESEND_API_KEY / BILLING_FROM_EMAIL).");
   const replyTo = process.env.BILLING_REPLY_TO || undefined;
-  const { error } = await new Resend(apiKey).emails.send({ from, to, subject, html, text, replyTo, bcc: firmCopy(to) });
+  const { error } = await new Resend(apiKey).emails.send({ from, to, subject, html, text, replyTo, bcc: firmCopy(to), attachments: attachments?.length ? attachments : undefined });
   if (error) throw new Error(error.message);
 }
 

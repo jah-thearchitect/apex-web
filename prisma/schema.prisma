@@ -460,6 +460,8 @@ model BookingMessage {
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   subject   String
   body      String
+  // Files attached to the email: [{ path, name, size }] in the private store.
+  files     Json     @default("[]")
   createdAt DateTime @default(now())
 
   @@index([bookingId])
