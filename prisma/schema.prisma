@@ -176,6 +176,8 @@ model Quote {
   acceptedAt     DateTime?
   acceptedName   String?
   declinedAt     DateTime?
+  // Files emailed with the quote: [{ path, name, size }] in the private store.
+  files          Json        @default("[]")
   invoices       Invoice[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -237,6 +239,8 @@ model Invoice {
   // "Did it arrive?" reminders to the firm for Gusto/offline invoices.
   paymentNudgeAt        DateTime?
   paymentNudgeCount     Int           @default(0)
+  // Files emailed with the invoice: [{ path, name, size }] in the private store.
+  files                 Json          @default("[]")
   buildBrief            BuildBrief?
   changeRequest         ChangeRequest?
   createdAt             DateTime      @default(now())

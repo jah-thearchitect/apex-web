@@ -6,7 +6,9 @@ import { useEffect, useState, useTransition } from "react";
 import {
   duplicateInvoice, recordManualPayment, saveInvoice, saveQuote, sendInvoice, sendQuote, voidInvoice,
 } from "@/app/admin/billing-actions";
+import type { FileRef } from "@/lib/briefQuestions";
 import { depositCents, formatMoney, lineTotal, parseDollars, subtotal } from "@/lib/money";
+import { FileField } from "../FileField";
 
 type Row = { key: number; description: string; details: string; quantity: string; price: string };
 type Catalog = { id: string; name: string; details: string; unitCents: number };
@@ -43,6 +45,8 @@ export type DocEditorProps = {
     sentAt: string | null;
     locked: boolean;
     items: { description: string; details: string; quantity: number; unitCents: number }[];
+    /** Files emailed along with the document. */
+    files?: FileRef[];
     relatedLinks?: { label: string; href: string }[];
   };
 };
@@ -69,6 +73,7 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
   const [rows, setRows] = useState<Row[]>(
     doc?.items.length ? doc.items.map(toRow) : defaults.items?.length ? defaults.items.map((i) => ({ ...toRow(i), price: i.unitCents ? toRow(i).price : "" })) : [blankRow()]
   );
+  const [files, setFiles] = useState<FileRef[]>(doc?.files ?? []);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState("");
   const [pending, start] = useTransition();
@@ -103,8 +108,8 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
     const bad = items.find((i) => i.description.trim() && !Number.isFinite(i.unitCents));
     if (bad) { setStatus(`Check the price on "${bad.description}".`); return null; }
     const res = isQuote
-      ? await saveQuote({ id: doc?.id, clientId, title, intro, terms, validUntil: validUntil || null, depositPercent: Number(depositPercent) || 0, items })
-      : await saveInvoice({ id: doc?.id, clientId, title, notes, kind, issueDate, dueDate, items, changeRequestId: doc ? undefined : defaults.changeRequestId });
+      ? await saveQuote({ id: doc?.id, clientId, title, intro, terms, validUntil: validUntil || null, depositPercent: Number(depositPercent) || 0, items, files })
+      : await saveInvoice({ id: doc?.id, clientId, title, notes, kind, issueDate, dueDate, items, files, changeRequestId: doc ? undefined : defaults.changeRequestId });
     if (!res.ok) { setStatus(res.error); return null; }
     setDirty(false);
     if (!doc) router.replace(`/admin/${isQuote ? "quotes" : "invoices"}/${res.id}`);
@@ -246,6 +251,11 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
           <span>{isQuote ? "Terms" : "Notes"} <small>{isQuote ? "shown below the totals" : "shown at the bottom of the invoice"}</small></span>
           <textarea rows={4} value={isQuote ? terms : notes} maxLength={10000} onChange={(e) => touch(isQuote ? setTerms : setNotes)(e.target.value)} />
         </label>
+
+        <div className="field">
+          <span>Attachments <small>optional: images, PDFs, or documents. They go with the email each time you send this {type}.</small></span>
+          <FileField uploadUrl="/api/admin/attachments" files={files} onChange={(f) => { setFiles(f); setDirty(true); }} max={5} disabled={locked} />
+        </div>
       </fieldset>
 
       {!isQuote && doc && (

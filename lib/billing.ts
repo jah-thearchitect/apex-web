@@ -4,6 +4,7 @@ import type { BusinessSettings } from "@/generated/prisma/client";
 import { formatMoney, paymentMethodNote, subtotal, workStartNote } from "./money";
 import { formatDate } from "./posts";
 import { prisma } from "./prisma";
+import { loadAttachments, parseAttachments } from "./emailAttachments";
 import { SITE_URL } from "./site";
 
 export async function getSettings(): Promise<BusinessSettings> {
@@ -82,45 +83,53 @@ type ItemRow = { quantity: number; unitCents: number };
 
 export async function emailQuote(q: {
   number: string; token: string; title: string; validUntil: Date | null;
-  client: { contactName: string; email: string }; items: ItemRow[];
+  client: { contactName: string; email: string }; items: ItemRow[]; files?: unknown;
 }) {
   const s = await getSettings();
   const first = q.client.contactName.split(/\s+/)[0] || "there";
   const total = formatMoney(subtotal(q.items));
+  const files = parseAttachments(q.files);
+  const attachments = await loadAttachments(files);
+  const attached = files.length ? P(`<strong>Attached:</strong> ${files.map((f) => esc(f.name)).join(", ")}`) : "";
+  const attachedText = files.length ? `\n\nAttached: ${files.map((f) => f.name).join(", ")}` : "";
   const valid = q.validUntil ? ` It's valid through ${formatDate(q.validUntil)}.` : "";
   const html = emailShell(
     esc(`Your proposal: ${q.title}`),
     P(`Hi ${esc(first)},`) +
       P(`Your proposal from ${esc(s.legalName)} is ready. Quote ${q.number} totals <strong>${total}</strong>.${valid}`) +
-      P("You can review the full scope and accept it online."),
+      P("You can review the full scope and accept it online.") + attached,
     { label: "Review the proposal", url: quoteUrl(q.token) },
     `${esc(s.legalName)} &middot; Quote ${q.number}`
   );
   const text = `Hi ${first},\n\nYour proposal from ${s.legalName} is ready. Quote ${q.number} totals ${total}.${valid}\n\nReview and accept it here: ${quoteUrl(q.token)}`;
-  await send(q.client.email, `Proposal ${q.number}: ${q.title}`, html, text);
+  await send(q.client.email, `Proposal ${q.number}: ${q.title}`, html, text + attachedText, attachments);
 }
 
 export async function emailInvoice(inv: {
   number: string; token: string; title: string; dueDate: Date; kind: string;
-  client: { contactName: string; email: string; paymentMethod?: string }; items: ItemRow[];
+  client: { contactName: string; email: string; paymentMethod?: string }; items: ItemRow[]; files?: unknown;
 }) {
   const s = await getSettings();
   const first = inv.client.contactName.split(/\s+/)[0] || "there";
   const total = formatMoney(subtotal(inv.items));
   const what = inv.kind === "DEPOSIT" ? "Your deposit invoice" : "Your invoice";
   const method = paymentMethodNote(inv.client.paymentMethod ?? "STRIPE");
+  const files = parseAttachments(inv.files);
+  const attachments = await loadAttachments(files);
+  const attached = files.length ? P(`<strong>Attached:</strong> ${files.map((f) => esc(f.name)).join(", ")}`) : "";
+  const attachedText = files.length ? `\n\nAttached: ${files.map((f) => f.name).join(", ")}` : "";
   const html = emailShell(
     esc(`${what}: ${inv.title}`),
     P(`Hi ${esc(first)},`) +
       P(`${what} ${inv.number} from ${esc(s.legalName)} is ready. The amount due is <strong>${total}</strong>, due ${formatDate(inv.dueDate)}.`) +
       (workStartNote(inv.kind) ? P(`<strong>${workStartNote(inv.kind)}</strong>`) : "") +
-      (method ? P(method) + P("You can view it and download a PDF.") : P("You can view it, download a PDF, and pay online.")),
+      (method ? P(method) + P("You can view it and download a PDF.") : P("You can view it, download a PDF, and pay online.")) + attached,
     { label: method ? "View invoice" : "View & pay invoice", url: invoiceUrl(inv.token) },
     `${esc(s.legalName)} &middot; Invoice ${inv.number}`
   );
   const start = workStartNote(inv.kind);
   const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.${start ? `\n\n${start}` : ""}${method ? `\n\n${method}` : ""}\n\n${method ? "View" : "View and pay"}: ${invoiceUrl(inv.token)}`;
-  await send(inv.client.email, `Invoice ${inv.number} from ${s.legalName}`, html, text);
+  await send(inv.client.email, `Invoice ${inv.number} from ${s.legalName}`, html, text + attachedText, attachments);
 }
 
 /** Heads-up to the firm (quote accepted, invoice paid). Never throws. */

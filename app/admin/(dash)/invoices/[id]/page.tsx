@@ -36,6 +36,7 @@ export default async function EditInvoice({ params }: { params: Promise<{ id: st
         sentAt: inv.sentAt?.toISOString() ?? null,
         locked: inv.status === "PAID" || inv.status === "VOID",
         items: inv.items,
+        files: Array.isArray(inv.files) ? (inv.files as { path: string; name: string; size: number }[]) : [],
         relatedLinks: [
           { label: "View client", href: `/admin/clients/${inv.clientId}` },
           ...(inv.quote ? [{ label: `From quote ${inv.quote.number}`, href: `/admin/quotes/${inv.quote.id}` }] : []),

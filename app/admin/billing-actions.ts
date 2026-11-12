@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { emailInvoice, emailQuote, getSettings, nextNumber } from "@/lib/billing";
 import { recordContact, splitName, subscribeClient } from "@/lib/contacts";
+import { parseAttachments, type Attached } from "@/lib/emailAttachments";
 import { subtotal, type LineItem } from "@/lib/money";
 import { markInvoicePaid } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
@@ -113,6 +114,7 @@ export type QuoteInput = {
   validUntil: string | null;
   depositPercent: number;
   items: LineItem[];
+  files?: Attached[];
 };
 
 export async function saveQuote(input: QuoteInput): Promise<Result<{ id: string; number: string }>> {
@@ -135,6 +137,7 @@ export async function saveQuote(input: QuoteInput): Promise<Result<{ id: string;
     terms: str(input.terms, 10000),
     validUntil: toDate(input.validUntil),
     depositPercent: Math.max(0, Math.min(100, Math.round(Number(input.depositPercent) || 0))),
+    files: parseAttachments(input.files),
   };
   const itemRows = items.map((i, position) => ({ ...i, details: i.details ?? "", position }));
 
@@ -181,6 +184,7 @@ export type InvoiceInput = {
   issueDate: string;
   dueDate: string;
   items: LineItem[];
+  files?: Attached[];
   /** New invoices only: the update request this bills for. */
   changeRequestId?: string;
 };
@@ -203,7 +207,7 @@ export async function saveInvoice(input: InvoiceInput): Promise<Result<{ id: str
     }
   }
 
-  const data = { clientId: client.id, title, notes: str(input.notes, 5000), kind: input.kind, issueDate, dueDate };
+  const data = { clientId: client.id, title, notes: str(input.notes, 5000), kind: input.kind, issueDate, dueDate, files: parseAttachments(input.files) };
   const itemRows = items.map((i, position) => ({ ...i, details: i.details ?? "", position }));
   const invoice = input.id
     ? await prisma.$transaction(async (tx) => {

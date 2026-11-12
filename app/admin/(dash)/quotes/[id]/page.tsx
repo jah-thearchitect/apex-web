@@ -35,6 +35,7 @@ export default async function EditQuote({ params }: { params: Promise<{ id: stri
         sentAt: q.sentAt?.toISOString() ?? null,
         locked: q.status === "ACCEPTED",
         items: q.items,
+        files: Array.isArray(q.files) ? (q.files as { path: string; name: string; size: number }[]) : [],
         relatedLinks: [
           { label: "View client", href: `/admin/clients/${q.clientId}` },
           ...q.invoices.map((i) => ({ label: `Deposit invoice ${i.number}`, href: `/admin/invoices/${i.id}` })),
