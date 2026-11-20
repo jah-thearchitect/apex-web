@@ -12,7 +12,7 @@ export default async function EditInvoice({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const inv = await prisma.invoice.findUnique({
     where: { id },
-    include: { items: { orderBy: { position: "asc" } }, quote: { select: { id: true, number: true } }, changeRequest: { select: { id: true, kind: true } } },
+    include: { items: { orderBy: { position: "asc" } }, quote: { select: { id: true, number: true } }, changeRequest: { select: { id: true, kind: true } }, reminders: { orderBy: { createdAt: "desc" }, take: 10 } },
   });
   if (!inv) notFound();
   const ctx = await editorContext(inv.clientId);
@@ -36,6 +36,8 @@ export default async function EditInvoice({ params }: { params: Promise<{ id: st
         sentAt: inv.sentAt?.toISOString() ?? null,
         locked: inv.status === "PAID" || inv.status === "VOID",
         items: inv.items,
+        autoReminders: inv.autoReminders,
+        reminders: inv.reminders.map((r) => ({ kind: r.kind, at: r.createdAt.toISOString() })),
         files: Array.isArray(inv.files) ? (inv.files as { path: string; name: string; size: number }[]) : [],
         relatedLinks: [
           { label: "View client", href: `/admin/clients/${inv.clientId}` },

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { emailInvoice, emailQuote, getSettings, nextNumber } from "@/lib/billing";
 import { recordContact, splitName, subscribeClient } from "@/lib/contacts";
 import { parseAttachments, type Attached } from "@/lib/emailAttachments";
+import { sendInvoiceReminder } from "@/lib/invoiceReminders";
 import { subtotal, type LineItem } from "@/lib/money";
 import { markInvoicePaid } from "@/lib/payments";
 import { prisma } from "@/lib/prisma";
@@ -244,6 +245,35 @@ export async function sendInvoice(id: string): Promise<Result> {
   await prisma.invoice.update({ where: { id }, data: { status: inv.status === "DRAFT" ? "SENT" : inv.status, sentAt: new Date() } });
   revalidatePath(`/admin/invoices/${id}`);
   revalidatePath("/admin/invoices");
+  return { ok: true, id };
+}
+
+/** The Remind button: emails the client a reminder about this unpaid invoice. */
+export async function remindInvoice(id: string): Promise<Result> {
+  await requireAdmin();
+  const r = await sendInvoiceReminder(id, "MANUAL");
+  if (!r.ok) return r;
+  revalidatePath(`/admin/invoices/${id}`);
+  revalidatePath("/admin/invoices");
+  return { ok: true, id };
+}
+
+/** The Remind button on the invoice list: sends, then comes back with a note. */
+export async function remindInvoiceFromList(id: string): Promise<void> {
+  await requireAdmin();
+  const inv = await prisma.invoice.findUnique({ where: { id }, select: { number: true } });
+  const r = await sendInvoiceReminder(id, "MANUAL");
+  revalidatePath("/admin/invoices");
+  const q = new URLSearchParams({ show: "open", [r.ok ? "reminded" : "remindError"]: r.ok ? (inv?.number ?? "") : r.error });
+  redirect(`/admin/invoices?${q}`);
+}
+
+/** Turns the automatic 48/72-hour reminders on or off for one invoice. */
+export async function setInvoiceAutoReminders(id: string, on: boolean): Promise<Result> {
+  await requireAdmin();
+  const updated = await prisma.invoice.updateMany({ where: { id }, data: { autoReminders: !!on } });
+  if (!updated.count) return { ok: false, error: "Invoice not found." };
+  revalidatePath(`/admin/invoices/${id}`);
   return { ok: true, id };
 }
 

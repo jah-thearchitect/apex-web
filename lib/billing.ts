@@ -5,6 +5,7 @@ import { formatMoney, paymentMethodNote, subtotal, workStartNote } from "./money
 import { formatDate } from "./posts";
 import { prisma } from "./prisma";
 import { loadAttachments, parseAttachments } from "./emailAttachments";
+import { daysUntilDue } from "./invoiceReminderRules";
 import { SITE_URL } from "./site";
 
 export async function getSettings(): Promise<BusinessSettings> {
@@ -130,6 +131,31 @@ export async function emailInvoice(inv: {
   const start = workStartNote(inv.kind);
   const text = `Hi ${first},\n\n${what} ${inv.number} from ${s.legalName} is ready. Amount due: ${total}, due ${formatDate(inv.dueDate)}.${start ? `\n\n${start}` : ""}${method ? `\n\n${method}` : ""}\n\n${method ? "View" : "View and pay"}: ${invoiceUrl(inv.token)}`;
   await send(inv.client.email, `Invoice ${inv.number} from ${s.legalName}`, html, text + attachedText, attachments);
+}
+
+/** A friendly nudge to the client about an unpaid invoice. Throws on email failure. */
+export async function emailInvoiceReminder(inv: {
+  number: string; token: string; title: string; dueDate: Date;
+  client: { contactName: string; email: string; paymentMethod?: string }; items: ItemRow[];
+}) {
+  const s = await getSettings();
+  const first = inv.client.contactName.split(/\s+/)[0] || "there";
+  const total = formatMoney(subtotal(inv.items));
+  const days = daysUntilDue(inv.dueDate, new Date());
+  const when = days > 1 ? `It's due ${formatDate(inv.dueDate)}.` : days === 1 ? "It's due tomorrow." : days === 0 ? "It's due today." : `It was due ${formatDate(inv.dueDate)}.`;
+  const method = paymentMethodNote(inv.client.paymentMethod ?? "STRIPE");
+  const lead = `This is a friendly reminder that invoice ${inv.number} (${inv.title}) from ${s.legalName} is still open. The amount due is`;
+  const html = emailShell(
+    esc(`A reminder about invoice ${inv.number}`),
+    P(`Hi ${esc(first)},`) +
+      P(`${esc(lead)} <strong>${total}</strong>. ${when}`) +
+      (method ? P(method) : P("You can view the invoice, download a PDF, and pay online in a minute or two.")) +
+      P("If you've already taken care of it, thank you, and please disregard this note. If anything about it is unclear, just reply to this email."),
+    { label: method ? "View invoice" : "View & pay invoice", url: invoiceUrl(inv.token) },
+    `${esc(s.legalName)} &middot; Invoice ${inv.number}`
+  );
+  const text = `Hi ${first},\n\n${lead} ${total}. ${when}${method ? `\n\n${method}` : ""}\n\n${method ? "View" : "View and pay"}: ${invoiceUrl(inv.token)}\n\nIf you've already taken care of it, thank you, and please disregard this note.`;
+  await send(inv.client.email, `Reminder: invoice ${inv.number} from ${s.legalName} (${total})`, html, text);
 }
 
 /** Heads-up to the firm (quote accepted, invoice paid). Never throws. */

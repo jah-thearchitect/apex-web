@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import {
-  duplicateInvoice, recordManualPayment, saveInvoice, saveQuote, sendInvoice, sendQuote, voidInvoice,
+  duplicateInvoice, recordManualPayment, remindInvoice, saveInvoice, saveQuote, sendInvoice, sendQuote, setInvoiceAutoReminders, voidInvoice,
 } from "@/app/admin/billing-actions";
+import { AUTO_LABEL, type ReminderKind } from "@/lib/invoiceReminderRules";
 import type { FileRef } from "@/lib/briefQuestions";
 import { depositCents, formatMoney, lineTotal, parseDollars, subtotal } from "@/lib/money";
 import { FileField } from "../FileField";
@@ -47,6 +48,9 @@ export type DocEditorProps = {
     items: { description: string; details: string; quantity: number; unitCents: number }[];
     /** Files emailed along with the document. */
     files?: FileRef[];
+    /** Invoices: automatic 48/72-hour reminders on or off, and the reminders already sent (newest first). */
+    autoReminders?: boolean;
+    reminders?: { kind: string; at: string }[];
     relatedLinks?: { label: string; href: string }[];
   };
 };
@@ -74,6 +78,7 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
     doc?.items.length ? doc.items.map(toRow) : defaults.items?.length ? defaults.items.map((i) => ({ ...toRow(i), price: i.unitCents ? toRow(i).price : "" })) : [blankRow()]
   );
   const [files, setFiles] = useState<FileRef[]>(doc?.files ?? []);
+  const [autoOn, setAutoOn] = useState(doc?.autoReminders ?? true);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState("");
   const [pending, start] = useTransition();
@@ -139,6 +144,26 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
   const onVoid = () => {
     if (!doc || !window.confirm("Void this invoice? The client's link will show it as void.")) return;
     run(async () => { const r = await voidInvoice(doc.id); setStatus(r.ok ? "Voided." : r.error); router.refresh(); });
+  };
+
+  const when = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
+  const onRemind = () => {
+    if (!doc) return;
+    const to = clients.find((c) => c.id === clientId)?.email ?? "the client";
+    const last = doc.reminders?.[0];
+    const hrs = last ? Math.round((Date.now() - new Date(last.at).getTime()) / 3_600_000) : null;
+    const note = last && hrs !== null && hrs < 24 ? `\n\nA reminder already went out ${hrs < 1 ? "less than an hour" : `${hrs} hour${hrs === 1 ? "" : "s"}`} ago.` : "";
+    if (!window.confirm(`Email ${to} a reminder about invoice ${doc.number}?${note}`)) return;
+    run(async () => { const r = await remindInvoice(doc.id); setStatus(r.ok ? `Reminder sent to ${to}.` : r.error); router.refresh(); });
+  };
+  const onToggleAuto = (on: boolean) => {
+    if (!doc) return;
+    setAutoOn(on);
+    run(async () => {
+      const r = await setInvoiceAutoReminders(doc.id, on);
+      if (!r.ok) { setAutoOn(!on); setStatus(r.error); return; }
+      setStatus(on ? "Automatic reminders are on." : "Automatic reminders are off for this invoice.");
+    });
   };
 
   const publicHref = doc ? `/${isQuote ? "q" : "i"}/${doc.token}` : null;
@@ -257,6 +282,25 @@ export function DocEditor({ type, clients, catalog, defaults, doc }: DocEditorPr
           <FileField uploadUrl="/api/admin/attachments" files={files} onChange={(f) => { setFiles(f); setDirty(true); }} max={5} disabled={locked} />
         </div>
       </fieldset>
+
+      {!isQuote && doc && (doc.status === "SENT" || doc.status === "VIEWED") && (
+        <div className="field" style={{ borderTop: "1px solid var(--line-ink)", marginTop: 32, paddingTop: 24 }}>
+          <span>Payment reminders <small>emailed to the client about this unpaid invoice</small></span>
+          <div className="editor-actions">
+            <button type="button" className="btn-solid" onClick={onRemind} disabled={pending}>Send reminder now</button>
+            <label className="check">
+              <input type="checkbox" checked={autoOn} onChange={(e) => onToggleAuto(e.target.checked)} disabled={pending} />
+              Remind automatically 48 and 72 hours after sending
+            </label>
+          </div>
+          <small style={{ color: "var(--on-ink-faint)" }}>
+            {doc.reminders && doc.reminders.length > 0
+              ? `Sent: ${doc.reminders.map((r) => `${when(r.at)} (${r.kind === "MANUAL" ? "by you" : `${AUTO_LABEL[r.kind as ReminderKind] ?? r.kind}, automatic`})`).join(" · ")}`
+              : "No reminders sent yet."}
+            {autoOn ? " Automatic reminders go out between 8 am and 7 pm Eastern, and stop once the invoice is paid." : ""}
+          </small>
+        </div>
+      )}
 
       {!isQuote && doc && (
         <div className="editor-danger">

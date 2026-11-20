@@ -241,6 +241,9 @@ model Invoice {
   paymentNudgeCount     Int           @default(0)
   // Files emailed with the invoice: [{ path, name, size }] in the private store.
   files                 Json          @default("[]")
+  // Automatic client reminders 48 and 72 hours after the invoice is sent.
+  autoReminders         Boolean       @default(true)
+  reminders             InvoiceReminder[]
   buildBrief            BuildBrief?
   changeRequest         ChangeRequest?
   createdAt             DateTime      @default(now())
@@ -494,4 +497,18 @@ model WorkLog {
 
   @@index([clientId, workDate])
   @@index([workDate])
+}
+
+// A reminder emailed to the client about an unpaid invoice. `kind` is MANUAL
+// (the Remind button), AUTO_48 or AUTO_72. Automatic ones carry a `claimKey`
+// (invoice + send time + kind) so overlapping cron runs can't send twice.
+model InvoiceReminder {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  kind      String
+  claimKey  String?  @unique
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId, createdAt])
 }
